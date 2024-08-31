@@ -1,6 +1,4 @@
-﻿using SharpBLT;
-using SharpDisasm.Udis86;
-using System.Drawing;
+﻿using SharpDisasm.Udis86;
 using System.Runtime.InteropServices;
 
 namespace SharpBLT
@@ -672,7 +670,7 @@ namespace SharpBLT
                 result[sizeof(byte) * 2 + 4] = (byte)(targetAddr >> 24);
                 result[sizeof(byte) * 2 + 5] = (byte)(targetAddr >> 16);
                 result[sizeof(byte) * 2 + 6] = (byte)(targetAddr >> 8);
-                result[sizeof(byte) * 2 + 7] = (byte)(targetAddr >> 56);
+                result[sizeof(byte) * 2 + 7] = (byte)(targetAddr);
 
                 int offset = 2 + sizeof(long);
 
@@ -686,13 +684,13 @@ namespace SharpBLT
             return result;
         }
 
-        private void HookMemoryExecuteOnly(IntPtr pAddr, int size)
+        private static void HookMemoryExecuteOnly(IntPtr pAddr, int size)
         {
 	        if (!Kernel32.VirtualProtect(pAddr, new UIntPtr((uint)size), Kernel32.PAGE_EXECUTE, out uint oldProtect))
                 throw new Exception("Failed to protect memory");
         }
 
-        private void HookMemoryExecuteReadWrite(IntPtr pAddr, int size)
+        private static void HookMemoryExecuteReadWrite(IntPtr pAddr, int size)
         {
             if (!Kernel32.VirtualProtect(pAddr, new UIntPtr((uint)size), Kernel32.PAGE_EXECUTE_READWRITE, out uint oldProtect))
                 throw new Exception("Failed to protect memory");
