@@ -12,6 +12,17 @@ namespace SharpBLT
         public const int PAGE_EXECUTE = 0x10;
         public const int PAGE_EXECUTE_READWRITE = 0x40;
 
+        public const int STD_OUTPUT_HANDLE = -11;
+
+        public const ushort FOREGROUND_BLUE      = 0x0001; // text color contains blue.
+        public const ushort FOREGROUND_GREEN     = 0x0002; // text color contains green.
+        public const ushort FOREGROUND_RED       = 0x0004; // text color contains red.
+        public const ushort FOREGROUND_INTENSITY = 0x0008; // text color is intensified.
+        public const ushort BACKGROUND_BLUE      = 0x0010; // background color contains blue.
+        public const ushort BACKGROUND_GREEN     = 0x0020; // background color contains green.
+        public const ushort BACKGROUND_RED       = 0x0040; // background color contains red.
+        public const ushort BACKGROUND_INTENSITY = 0x0080; // background color is intensified.
+
         [Flags]
         public enum AllocationType : uint
         {
@@ -82,5 +93,16 @@ namespace SharpBLT
 
         [DllImport("kernel32.dll")]
         public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetStdHandle(int nStdHandle);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool SetConsoleTextAttribute(IntPtr hConsoleOutput, ushort wAttributes);
+
+        [DllImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AllocConsole();
+
     }
 }
