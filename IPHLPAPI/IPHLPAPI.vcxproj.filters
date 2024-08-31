@@ -27,5 +27,14 @@
     <ClInclude Include="DotNetHost.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="hostfxr\include\coreclr_delegates.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="hostfxr\include\hostfxr.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="hostfxr\include\nethost.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

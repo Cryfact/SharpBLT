@@ -9,6 +9,7 @@
 **/out
 **/.build
 **/bin
+!IPHLPAPI/hostfxr/bin/
 **/Debug
 **/Release
 packages/**/src
