@@ -46,7 +46,10 @@ namespace SharpBLT
             lock (m_lock)
             {
                 if (m_logFileStream != null)
+                {
                     m_writer.WriteLine(msg);
+                    m_writer.Flush();
+                }
 
                 if (m_console != null)
                 {
@@ -71,7 +74,7 @@ namespace SharpBLT
                             break;
                     }
 
-                    System.Console.WriteLine(msg);
+                    Console.WriteLine(msg);
                 }
             }
         }

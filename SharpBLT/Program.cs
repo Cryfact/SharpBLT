@@ -22,11 +22,13 @@ namespace SharpBLT
         {
             ValidateModDirectories();
 
+#if DEBUG
             User32.MessageBox(IntPtr.Zero, "Debug Me", "Debug Me", User32.MB_OK);
-
-           // if (File.Exists("mods/developer.txt"))
-                Logger.Instance().OpenConsole();
-
+#else
+            if (File.Exists("mods/developer.txt"))
+#endif
+            Logger.Instance().OpenConsole();
+            
             Game.Initialize();
             Lua.Initialize();
         }

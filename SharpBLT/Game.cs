@@ -44,7 +44,7 @@ namespace SharpBLT
                 if (addr == IntPtr.Zero)
                     throw new Exception($"Failed to resolve Method '{field.Name}'");
 
-                System.Console.WriteLine($"Address for '{field.Name}' found: 0x{addr.ToInt64():X8}");
+                Logger.Instance().Log(LogType.Log, $"Address for '{field.Name}' found: 0x{addr.ToInt64():X8}");
 
                 if (functionTargetAttr == null)
                 {

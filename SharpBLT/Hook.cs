@@ -26,7 +26,7 @@ namespace SharpBLT
             m_target = target;
             m_targetAddress = Marshal.GetFunctionPointerForDelegate(m_target);
 
-            System.Console.WriteLine($"Create Hook on 0x{m_address:X8} to 0x{m_targetAddress:X8}");
+            Logger.Instance().Log(LogType.Log, $"Create Hook on 0x{m_address:X8} to 0x{m_targetAddress:X8}");
 
             List<ud_type> registerInUse = [ ud_type.UD_R_RCX, ud_type.UD_R_RDX, ud_type.UD_R_R8, ud_type.UD_R_R9 ]; // all used registers in fastcall on x64 (RCX used on thiscall)
 

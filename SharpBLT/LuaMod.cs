@@ -212,8 +212,7 @@ namespace SharpBLT
             for (int i = 0; i < top; ++i)
             {
                 string str = Lua.lua_tolstring(L, i + 1, out var len);
-                System.Console.Write(i > 0 ? "    " : "");
-                System.Console.Write(str);
+                Logger.Instance().Log(LogType.Lua, (i > 0 ? "    " : "") + str);
             }
 
             return 0;
