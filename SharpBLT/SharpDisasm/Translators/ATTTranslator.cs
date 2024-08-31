@@ -183,7 +183,7 @@ namespace SharpDisasm.Translators
             bool star = false;
 
             /* check if P_OSO prefix is used */
-            if (BitOps.P_OSO(u.itab_entry.Prefix) == 0 && u.pfx_opr != 0)
+            if (Udis86.BitOps.P_OSO(u.itab_entry.Prefix) == 0 && u.pfx_opr != 0)
             {
                 switch (u.dis_mode)
                 {
@@ -198,7 +198,7 @@ namespace SharpDisasm.Translators
             }
 
             /* check if P_ASO prefix was used */
-            if (BitOps.P_ASO(u.itab_entry.Prefix) == 0 && u.pfx_adr != 0)
+            if (Udis86.BitOps.P_ASO(u.itab_entry.Prefix) == 0 && u.pfx_adr != 0)
             {
                 switch (u.dis_mode)
                 {

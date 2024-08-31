@@ -4,8 +4,8 @@ namespace SharpBLT
 {
     public sealed class SearchRange
     {
-        public static readonly IntPtr ms_startSearchAddress;
-        public static readonly int ms_searchSize;
+        private static readonly IntPtr ms_startSearchAddress;
+        private static readonly int ms_searchSize;
 
         static SearchRange()
         {

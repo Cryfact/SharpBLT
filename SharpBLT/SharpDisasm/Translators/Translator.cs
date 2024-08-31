@@ -76,7 +76,7 @@ namespace SharpDisasm.Translators
         /// <summary>
         /// An optional symbol resolver <see cref="SharpDisasm.Translators.SymbolResolverDelegate"/>.
         /// </summary>
-        public SymbolResolverDelegate SymbolResolver { get; set; }
+        public SymbolResolverDelegate? SymbolResolver { get; set; }
 
         /// <summary>
         /// Translate a list of instructions separated by <see cref="Environment.NewLine"/>.
@@ -175,10 +175,10 @@ namespace SharpDisasm.Translators
         /// </summary>
         /// <param name="type">The register <see cref="ud_type"/> to retrieve the corresponding string for. Note: only the UD_R_* types will result in a valid index.</param>
         /// <returns>The corresponding string value for the ud_type.UD_R_</returns>
-        protected string RegisterForType(ud_type type)
+        protected string RegisterForType(Udis86.ud_type type)
         {
             // Adjust to be zero based (i.e. the first register in ud_type starts at 1 == UD_R_AL)
-            int indx = (type - ud_type.UD_R_AL);
+            int indx = (type - Udis86.ud_type.UD_R_AL);
             return Registers[indx];
         }
 
@@ -254,7 +254,7 @@ namespace SharpDisasm.Translators
         /// <param name="addr"></param>
         protected void ud_syn_print_addr(Instruction insn, long addr)
         {
-            string name = null;
+            string? name = null;
             
             if (SymbolResolver != null)
             {
@@ -285,7 +285,7 @@ namespace SharpDisasm.Translators
         protected void ud_syn_print_imm(Instruction insn, Operand op)
         {
             ulong v;
-            if (op.Opcode == ud_operand_code.OP_sI && op.Size != insn.opr_mode)
+            if (op.Opcode == Udis86.ud_operand_code.OP_sI && op.Size != insn.opr_mode)
             {
                 if (op.Size == 8)
                 {
@@ -326,7 +326,7 @@ namespace SharpDisasm.Translators
         /// <param name="sign"></param>
         protected void ud_syn_print_mem_disp(Instruction insn, Operand op, int sign)
         {
-            if (op.Base == ud_type.UD_NONE && op.Index == ud_type.UD_NONE)
+            if (op.Base == Udis86.ud_type.UD_NONE && op.Index == Udis86.ud_type.UD_NONE)
             {
                 ulong v;
                 /* unsigned mem-offset */

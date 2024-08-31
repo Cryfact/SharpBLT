@@ -43,7 +43,7 @@ using System.Text;
 
 namespace SharpDisasm.Udis86
 {
-    #pragma warning disable 1591
+#pragma warning disable CS8981
     public class syn
     {
         public static readonly string[] ud_reg_tab = new string[] {
@@ -120,7 +120,7 @@ namespace SharpDisasm.Udis86
          *    moves the buffer pointer forward. On an overflow,
          *    returns a negative number and truncates the output.
          */
-        public static int ud_asmprintf(ref ud u, string fmt, params object[] args)
+        public static int ud_asmprintf(ref ud u, string fmt, params object?[] args)
         {
             int ret;
             int avail;
@@ -145,7 +145,7 @@ namespace SharpDisasm.Udis86
 
         public void ud_syn_print_addr(ref ud u, long addr)
         {
-            string name = null;
+            string? name = null;
             if (u.sym_resolver != null)
             {
                 long offset = 0;
@@ -243,5 +243,5 @@ namespace SharpDisasm.Udis86
             }
         }
     }
-    #pragma warning restore 1591
+#pragma warning restore CS8981
 }

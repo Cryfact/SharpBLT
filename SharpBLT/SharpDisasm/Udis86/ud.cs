@@ -41,7 +41,8 @@ using System.Text;
 
 using SharpDisasm.Helpers;
 
-#pragma warning disable 1591
+#pragma warning disable CS8618
+#pragma warning disable CS8981
 namespace SharpDisasm.Udis86
 {
     public delegate void UdTranslatorDelegate(ref ud ud);
@@ -116,4 +117,5 @@ namespace SharpDisasm.Udis86
 
     }
 }
-#pragma warning restore 1591
+#pragma warning restore CS8618
+#pragma warning restore CS8981

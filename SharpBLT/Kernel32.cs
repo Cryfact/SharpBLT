@@ -104,5 +104,8 @@ namespace SharpBLT
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool AllocConsole();
 
+        [DllImport("kernel32.dll")]
+        public static extern uint GetCurrentThreadId();
+
     }
 }

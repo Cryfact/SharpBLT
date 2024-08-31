@@ -178,7 +178,7 @@ namespace SharpDisasm
         public IEnumerable<Instruction> Disassemble()
         {
             Reset();
-            Instruction instruction = null;
+            Instruction? instruction = null;
             while ((instruction = NextInstruction()) != null)
             {
                 yield return instruction;
@@ -199,7 +199,7 @@ namespace SharpDisasm
         /// Decodes a single instruction and increments buffer position.
         /// </summary>
         /// <returns></returns>
-        public Instruction NextInstruction()
+        public Instruction? NextInstruction()
         {
             int length = 0;
             if ((length = Udis86.udis86.ud_disassemble(ref _u)) > 0)

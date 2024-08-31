@@ -27,7 +27,8 @@ namespace SharpBLT
         {
             ValidateModDirectories();
 
-
+            Game.Initialize();
+            Lua.Initialize();
 
             if (File.Exists("mods/developer.txt"))
                 Logger.Instance().OpenConsole();

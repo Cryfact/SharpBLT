@@ -17,6 +17,8 @@ namespace SharpBLT
 
         public bool IsEnabled { get; private set; }
 
+        public TDelegate OldFunction => IsEnabled ? m_target : m_trampoline;
+
         public Hook(IntPtr address, TDelegate target)
         { 
             m_address = address;

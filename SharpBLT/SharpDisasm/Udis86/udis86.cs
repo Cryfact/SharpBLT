@@ -412,7 +412,7 @@ namespace SharpDisasm.Udis86
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static string
+        public static string?
         ud_lookup_mnemonic(ud_mnemonic_code c)
         {
             if (c < ud_mnemonic_code.UD_MAX_MNEMONIC_CODE)

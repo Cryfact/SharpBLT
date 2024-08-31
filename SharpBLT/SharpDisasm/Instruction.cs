@@ -67,7 +67,7 @@ namespace SharpDisasm
         /// <summary>
         /// Mnemonic
         /// </summary>
-        public ud_mnemonic_code Mnemonic { get; private set; }
+        public Udis86.ud_mnemonic_code Mnemonic { get; private set; }
 
         /// <summary>
         /// The instruction operands (maximum 3)
@@ -168,9 +168,11 @@ namespace SharpDisasm
         /// <summary>
         /// The instruction table entry that applies to this instruction
         /// </summary>
-        internal ud_itab_entry itab_entry;
+        internal Udis86.ud_itab_entry itab_entry;
 
+#pragma warning disable CS8618 // Ein Non-Nullable-Feld muss beim Beenden des Konstruktors einen Wert ungleich NULL enthalten. Fügen Sie ggf. den „erforderlichen“ Modifizierer hinzu, oder deklarieren Sie den Modifizierer als NULL-Werte zulassend.
         internal Instruction(ref Udis86.ud u, bool keepBinary)
+#pragma warning restore CS8618 // Ein Non-Nullable-Feld muss beim Beenden des Konstruktors einen Wert ungleich NULL enthalten. Fügen Sie ggf. den „erforderlichen“ Modifizierer hinzu, oder deklarieren Sie den Modifizierer als NULL-Werte zulassend.
         {
             this.Offset = u.insn_offset;
             this.PC = u.pc;

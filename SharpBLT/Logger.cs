@@ -89,6 +89,14 @@ namespace SharpBLT
             }
         }
 
+        public void DestroyConsole()
+        {
+            lock (m_lock)
+            {
+                m_console = null;
+            }
+        }
+
 
         private static string GetLogTypeString(LogType logType)
         {
