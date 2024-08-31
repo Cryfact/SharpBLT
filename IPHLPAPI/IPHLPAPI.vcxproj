@@ -159,9 +159,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DotNetHost.h" />
-    <ClInclude Include="hostfxr\include\coreclr_delegates.h" />
-    <ClInclude Include="hostfxr\include\hostfxr.h" />
-    <ClInclude Include="hostfxr\include\nethost.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

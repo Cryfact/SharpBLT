@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpBLT", "SharpBLT\SharpB
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IPHLPAPI", "IPHLPAPI\IPHLPAPI.vcxproj", "{0451A986-3139-4A37-B765-9FC700679ED3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HostFxr", "HostFxr", "{CBCA5C90-3130-42B3-8F3D-9B8933A7E551}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
