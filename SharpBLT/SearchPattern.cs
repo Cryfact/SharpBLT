@@ -33,7 +33,6 @@ namespace SharpBLT
                 else if (c == '?')
                     m_nibbles[i++] = Wildcard;
             }
-
             m_nibbleCount = i;
         }
 

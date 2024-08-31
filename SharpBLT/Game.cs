@@ -25,8 +25,8 @@ namespace SharpBLT
         {
             ms_main_thread_id = Kernel32.GetCurrentThreadId();
 
-            var fields = typeof(Lua).GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            var methods = typeof(Lua).GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            var fields = typeof(Game).GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            var methods = typeof(Game).GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
             foreach (var field in fields)
             {
@@ -44,6 +44,8 @@ namespace SharpBLT
                 if (addr == IntPtr.Zero)
                     throw new Exception($"Failed to resolve Method '{field.Name}'");
 
+                System.Console.WriteLine($"Address for '{field.Name}' found: 0x{addr.ToInt64():X8}");
+
                 if (functionTargetAttr == null)
                 {
                     field.SetValue(null, Marshal.GetDelegateForFunctionPointer(addr, field.FieldType));
@@ -60,6 +62,7 @@ namespace SharpBLT
                 }
             }
 
+            ms_game_update_hook.Apply();
             old_application_update = ms_game_update_hook.OldFunction;
         }
 

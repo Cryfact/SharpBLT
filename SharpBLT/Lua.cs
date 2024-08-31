@@ -248,6 +248,8 @@ namespace SharpBLT
                 if (addr == IntPtr.Zero)
                     throw new Exception($"Failed to resolve Method '{field.Name}'");
 
+                System.Console.WriteLine($"Address for '{field.Name}' found: 0x{addr.ToInt64():X8}");
+
                 if (functionTargetAttr == null)
                 {
                     field.SetValue(null, Marshal.GetDelegateForFunctionPointer(addr, field.FieldType));
@@ -349,10 +351,11 @@ namespace SharpBLT
         public unsafe static string lua_tolstring(IntPtr L, int arg0, out int size)
         {
             var ptr = lua_tolstring_ptr(L, arg0, out var len);
+            var str = new string((sbyte*)ptr);
 
             size = len.ToInt32();
 
-            return new string(new ReadOnlySpan<char>(ptr.ToPointer(), (int)len));
+            return str;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -469,7 +472,7 @@ namespace SharpBLT
 
                 if (message != null)
                 {
-                    Logger.Instance().Log(LogType.Lua, message);
+                   // Logger.Instance().Log(LogType.Error, message);
 
                     NotifyErrorOverlay(L, message);
                     // This call pops the error message off the stack
@@ -486,11 +489,11 @@ namespace SharpBLT
             lua_close(L);
         }
 
-        private static IntPtr luaL_newstate_new(IntPtr thislol, bool no, bool freakin, int clue)
+        private unsafe static IntPtr luaL_newstate_new(IntPtr thislol, bool no, bool freakin, int clue)
         {
             var ret = luaL_newstate(thislol, no, freakin, clue);
 
-            IntPtr L = thislol;
+            IntPtr L = new IntPtr(*((void**)thislol.ToPointer()));
 
           //  PD2HOOK_LOG_LOG("Lua State: 0x{0:016x}", reinterpret_cast<uint64_t>(L));
 

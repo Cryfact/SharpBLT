@@ -257,6 +257,9 @@ namespace SharpBLT
             int n = Lua.lua_gettop(L);
 
             string filename = Lua.lua_tolstring(L, 1, out var length);
+
+            Logger.Instance().Log(LogType.Lua, $"luaF_dofile: {filename}");
+
             int error = Lua.luaL_loadfilex(L, filename);
             if (error != 0)
             {

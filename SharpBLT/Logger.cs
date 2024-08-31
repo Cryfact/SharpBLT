@@ -17,7 +17,7 @@ namespace SharpBLT
         private readonly Stream m_logFileStream;
         private readonly StreamWriter m_writer;
         private readonly object m_lock;
-        private Console? m_console;
+        private ConsoleEx? m_console;
 
         public LogType CurrentLogLevel { get; set; }
 
@@ -26,10 +26,10 @@ namespace SharpBLT
             CurrentLogLevel = LogType.Debug;
 
             string path = "mods/logs/";
-            path += DateTime.Now;
+            path += DateTime.Now.ToString("dd-MM-yyyy hh-mm-ss");
             path += "_log.txt";
 
-            m_logFileStream = new FileStream(path, FileMode.Append, FileAccess.ReadWrite);
+            m_logFileStream = new FileStream(path, FileMode.Append, FileAccess.Write);
             m_writer = new StreamWriter(m_logFileStream);
             m_lock = new object();
         }
@@ -80,7 +80,7 @@ namespace SharpBLT
         { 
             lock (m_lock)
             {
-                m_console = new Console();
+                m_console = new ConsoleEx();
             }
         }
 

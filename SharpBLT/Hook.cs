@@ -17,7 +17,7 @@ namespace SharpBLT
 
         public bool IsEnabled { get; private set; }
 
-        public TDelegate OldFunction => IsEnabled ? m_target : m_trampoline;
+        public TDelegate OldFunction => IsEnabled ? m_trampoline : m_target;
 
         public Hook(IntPtr address, TDelegate target)
         { 
@@ -26,21 +26,38 @@ namespace SharpBLT
             m_target = target;
             m_targetAddress = Marshal.GetFunctionPointerForDelegate(m_target);
 
+            System.Console.WriteLine($"Create Hook on 0x{m_address:X8} to 0x{m_targetAddress:X8}");
+
             List<ud_type> registerInUse = [ ud_type.UD_R_RCX, ud_type.UD_R_RDX, ud_type.UD_R_R8, ud_type.UD_R_R9 ]; // all used registers in fastcall on x64 (RCX used on thiscall)
 
             m_newBytes = GetJumpBytes(m_address, m_targetAddress);
 
+            Console.Write("Jump Bytes: ");
+            ConsoleEx.WriteLine(m_newBytes);
+
             int length = Analyze(registerInUse, m_newBytes.Length, 20);
+
+            Console.WriteLine($"Analyzed Length on 0x{m_address:X8}: {length} Min Size: {m_newBytes.Length}");
 
             m_origBytes = new byte[length];
 
             Marshal.Copy(m_address, m_origBytes, 0, length);
 
+            Console.Write("Original Bytes: ");
+            ConsoleEx.WriteLine(m_origBytes);
+
             AllocateTrampoline(length * 3);
+
+            Console.WriteLine($"Trampoline Adress: 0x{m_trampolineAddress:X8}");
 
             m_trampoline = Marshal.GetDelegateForFunctionPointer<TDelegate>(m_trampolineAddress);
 
-            ApplyJumps(registerInUse, length);
+            int jumpSize = ApplyJumps(registerInUse, length);
+
+            HookMemoryExecuteOnly(m_trampolineAddress, length * 3);
+
+            Console.Write("Trampoline Bytes: ");
+            ConsoleEx.WriteLine(m_trampolineAddress, jumpSize + length);
         }
 
         public TDelegate? Apply()
@@ -54,6 +71,9 @@ namespace SharpBLT
             HookMemoryExecuteReadWrite(m_address, m_origBytes.Length);
 
             Marshal.Copy(m_newBytes, 0, m_address, m_newBytes.Length);
+
+            Console.Write("Applied Bytes: ");
+            ConsoleEx.WriteLine(m_address, m_newBytes.Length);
 
             HookMemoryExecuteOnly(m_address, m_origBytes.Length);
 
@@ -70,6 +90,9 @@ namespace SharpBLT
             HookMemoryExecuteReadWrite(m_address, m_origBytes.Length);
 
             Marshal.Copy(m_origBytes, 0, m_address, m_origBytes.Length);
+
+            Console.Write("Restored Bytes: ");
+            ConsoleEx.WriteLine(m_address, m_newBytes.Length);
 
             HookMemoryExecuteOnly(m_address, m_origBytes.Length);
 
@@ -120,7 +143,7 @@ namespace SharpBLT
             }
         }
 
-        private void ApplyJumps(List<ud_type> registerInUse, int size)
+        private int ApplyJumps(List<ud_type> registerInUse, int size)
         {
             var pBuffer = m_trampolineAddress;
 
@@ -130,8 +153,8 @@ namespace SharpBLT
             var src = pBuffer.ToInt64();
             var dst = m_address.ToInt64();
 
-            bool isNearTargetFunc = ((src + 5 + 0x7FFFFFFF) >= dst) || ((src + 5 - 0x7FFFFFFF) <= dst);
-
+            bool isNearTargetFunc = Math.Abs(dst - src + 5) <= 0x7FFFFFFF;
+            Console.WriteLine($"Math.Abs(dst - src + 5): ");
             if (!isNearTargetFunc)
             {
                 // perform 64 bit jump
@@ -139,7 +162,7 @@ namespace SharpBLT
 
                 if (unusedRegister != null)
                 {
-                    ApplyJump(pBuffer, m_address + size, unusedRegister.Value);
+                    return ApplyJump(pBuffer, m_address + size, unusedRegister.Value);
                 }
                 else
                 {
@@ -148,7 +171,7 @@ namespace SharpBLT
             }
             else
             {
-                ApplyJump(pBuffer, m_address + size, ud_type.UD_NONE);
+                return ApplyJump(pBuffer, m_address + size, ud_type.UD_NONE);
             }
         }
 
@@ -358,7 +381,7 @@ namespace SharpBLT
             long src = address.ToInt64();
             long dst = target.ToInt64();
 
-            bool isNearTargetFunc = ((src + 5 + 0x7FFFFFFF) >= dst) || ((src + 5 - 0x7FFFFFFF) <= dst);
+            bool isNearTargetFunc = Math.Abs(dst - src + 5) <= 0x7FFFFFFF;
 
             if (!isNearTargetFunc)
             {
@@ -528,10 +551,10 @@ namespace SharpBLT
                 var addressDif = (uint)(pTarget.ToInt64() - (pSource.ToInt64() + 5));
 
                 result[0] = 0xE9;
-                result[1] = (byte)(addressDif >> 24);
-                result[2] = (byte)(addressDif >> 16);
-                result[3] = (byte)(addressDif >> 8);
-                result[4] = (byte)(addressDif);
+                result[1] = (byte)(addressDif);
+                result[2] = (byte)(addressDif >> 8);
+                result[3] = (byte)(addressDif >> 16);
+                result[4] = (byte)(addressDif >> 24);
             }
             else
             {
@@ -665,14 +688,14 @@ namespace SharpBLT
 
                 var targetAddr = pTarget.ToInt64();
 
-                result[sizeof(byte) * 2] = (byte)(targetAddr >> 56);
-                result[sizeof(byte) * 2 + 1] = (byte)(targetAddr >> 48);
-                result[sizeof(byte) * 2 + 2] = (byte)(targetAddr >> 40);
-                result[sizeof(byte) * 2 + 3] = (byte)(targetAddr >> 32);
-                result[sizeof(byte) * 2 + 4] = (byte)(targetAddr >> 24);
-                result[sizeof(byte) * 2 + 5] = (byte)(targetAddr >> 16);
-                result[sizeof(byte) * 2 + 6] = (byte)(targetAddr >> 8);
-                result[sizeof(byte) * 2 + 7] = (byte)(targetAddr);
+                result[sizeof(byte) * 2] = (byte)(targetAddr);
+                result[sizeof(byte) * 2 + 1] = (byte)(targetAddr >> 8);
+                result[sizeof(byte) * 2 + 2] = (byte)(targetAddr >> 16);
+                result[sizeof(byte) * 2 + 3] = (byte)(targetAddr >> 24);
+                result[sizeof(byte) * 2 + 4] = (byte)(targetAddr >> 32);
+                result[sizeof(byte) * 2 + 5] = (byte)(targetAddr >> 40);
+                result[sizeof(byte) * 2 + 6] = (byte)(targetAddr >> 48);
+                result[sizeof(byte) * 2 + 7] = (byte)(targetAddr >> 56);
 
                 int offset = 2 + sizeof(long);
 

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Profil \"1\"": {
+      "commandName": "Executable",
+      "executablePath": "E:\\SteamLibrary\\steamapps\\common\\RAID World War II\\raid_win64_release.exe",
+      "workingDirectory": "E:\\SteamLibrary\\steamapps\\common\\RAID World War II",
+      "nativeDebugging": true
+    }
+  }
+}
