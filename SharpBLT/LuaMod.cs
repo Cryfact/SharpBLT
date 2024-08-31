@@ -45,7 +45,7 @@ namespace SharpBLT
                 new("ispcallforced", luaF_ispcallforced),
                 new("forcepcalls", luaF_forcepcalls),
                 new("GetDllVersion", luaF_GetDllVersion),
-                new ("EnableApplicationLog", luaF_EnableApplicationLog),
+                new("EnableApplicationLog", luaF_EnableApplicationLog),
             };
 
             Lua.luaI_openlib(L, "blt", bltLib, 0);
@@ -447,9 +447,9 @@ namespace SharpBLT
             try
             {
                 if (!files)
-                    directories = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories);
+                    directories = Directory.GetFiles(dir, "*.*", SearchOption.TopDirectoryOnly).Select((x) => Path.GetFileName(x)).ToArray();
                 else
-                    directories = Directory.GetDirectories(dir, "*.*", SearchOption.AllDirectories);
+                    directories = Directory.GetDirectories(dir, "*.*", SearchOption.TopDirectoryOnly); // FIXME? untested yet
             }
             catch (Exception)
 	        {
