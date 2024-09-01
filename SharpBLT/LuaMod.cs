@@ -1,8 +1,28 @@
 ﻿
+using System;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+
 namespace SharpBLT
 {
     public class LuaMod
     {
+        const int HTTP_BUFFER_SIZE = 81920; // 80kB
+
+        static HttpClientHandler _httpClientHandler = new()
+        {
+            AllowAutoRedirect = true,
+            ClientCertificateOptions = ClientCertificateOption.Automatic,
+            UseCookies = false,
+        };
+        static HttpClient _httpClient = new(_httpClientHandler)
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+        static int _httpRequestCounter = 0;
+
         public static void Initialize(IntPtr L)
         {
             Lua.lua_pushcclosure(L, luaF_print, 0);
@@ -159,7 +179,7 @@ namespace SharpBLT
             //if (verSize == 0)
             //{
             //    PD2HOOK_LOG_ERROR("Error occurred while calling 'GetFileVersionInfoSize': {}", GetLastError());
-                Lua.lua_pushstring(L, "0.0.0.0");
+            Lua.lua_pushstring(L, "0.0.0.0");
             //    return 1;
             //}
             //
@@ -174,7 +194,7 @@ namespace SharpBLT
             //}
             //
             //if (!VerQueryValue(verData.data(), "\\", (VOID FAR * FAR *) & lpBuffer, &size))
-	        //{
+            //{
             //    PD2HOOK_LOG_ERROR("Error occurred while calling 'VerQueryValue': {}", GetLastError());
             //    lua_pushstring(L, "0.0.0.0");
             //    return 1;
@@ -257,7 +277,7 @@ namespace SharpBLT
 
             string filename = Lua.lua_tolstring(L, 1, out var length);
 
-            Logger.Instance().Log(LogType.Lua, $"luaF_dofile: {filename}");
+            //Logger.Instance().Log(LogType.Lua, $"luaF_dofile: {filename}");
 
             int error = Lua.luaL_loadfilex(L, filename);
             if (error != 0)
@@ -303,47 +323,119 @@ namespace SharpBLT
             return 0;
         }
 
+        private struct HttpData
+        {
+            internal int id;
+            internal IntPtr L;
+            internal int functionReference;
+            internal int progressReference;
+        }
+
         private static int luaF_dohttpreq(IntPtr L)
         {
-            // TODO: Implement this
-            //PD2HOOK_LOG_LOG("Incoming HTTP Request/Request");
-            //
-            //int args = lua_gettop(L);
-            //int progressReference = 0;
-            //if (args >= 3)
-            //{
-            //    progressReference = luaL_ref(L, LUA_REGISTRYINDEX);
-            //}
-            //
-            //int functionReference = luaL_ref(L, LUA_REGISTRYINDEX);
-            //size_t len;
-            //const char* url_c = lua_tolstring(L, 1, &len);
-            //std::string url = std::string(url_c, len);
-            //
-            //PD2HOOK_LOG_LOG("{} - {}", std::string(url_c, len), functionReference);
-            //
-            //lua_http_data* ourData = new lua_http_data();
-            //ourData->funcRef = functionReference;
-            //ourData->progressRef = progressReference;
-            //ourData->L = L;
-            //
-            //HTTPReqIdent++;
-            //ourData->requestIdentifier = HTTPReqIdent;
-            //
-            //std::unique_ptr<pd2hook::HTTPItem> reqItem(new pd2hook::HTTPItem());
-            //reqItem->call = return_lua_http;
-            //reqItem->data = ourData;
-            //reqItem->url = url;
-            //
-            //if (progressReference != 0)
-            //{
-            //    reqItem->progress = progress_lua_http;
-            //}
-            //
-            //pd2hook::HTTPManager::GetSingleton()->LaunchHTTPRequest(std::move(reqItem));
-            //lua_pushinteger(L, HTTPReqIdent);
-            
+            Logger.Instance().Log(LogType.Log, "Incoming HTTP Request/Request");
+
+            int args = Lua.lua_gettop(L);
+            int progressReference = 0;
+            if (args >= 3)
+            {
+                progressReference = Lua.luaL_ref(L, Lua.LUA_REGISTRYINDEX);
+            }
+
+            int functionReference = Lua.luaL_ref(L, Lua.LUA_REGISTRYINDEX);
+            string url = Lua.lua_tolstring(L, 1, out int len);
+
+            Logger.Instance().Log(LogType.Log, $"{url} - {functionReference}");
+
+            _httpRequestCounter++;
+            int requestId = _httpRequestCounter;
+
+            var req = DoHttpReqAsync(
+                url,
+                new()
+                {
+                    id = requestId,
+                    functionReference = functionReference,
+                    progressReference = progressReference,
+                    L = L,
+                },
+                HttpRequestDone,
+                progressReference != 0 ? HttpRequestProgress : null
+            );
+
+            Lua.lua_pushinteger(L, requestId);
+
             return 1;
+        }
+
+        private async static Task DoHttpReqAsync(string url, HttpData data, Action<HttpData, string> onDone, Action<HttpData, long, long>? onProgress = null, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                var contentLength = response.Content.Headers.ContentLength;
+
+                using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+                using var target = new MemoryStream();
+
+                if (onProgress == null || !contentLength.HasValue)
+                {
+                    // Ignore progress reporting when there is no handler or the content length is unknown
+                    await source.CopyToAsync(target);
+                }
+                else
+                {
+                    var buffer = new byte[HTTP_BUFFER_SIZE];
+                    long totalBytesRead = 0;
+                    int bytesRead;
+                    while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
+                    {
+                        await target.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+                        totalBytesRead += bytesRead;
+                        onProgress.Invoke(data, totalBytesRead, contentLength.Value);
+                    }
+                    onProgress.Invoke(data, contentLength.Value, contentLength.Value);
+                }
+
+                using StreamReader reader = new(target);
+                onDone.Invoke(data, reader.ReadToEnd());
+            }
+            catch (Exception e)
+            {
+                Logger.Instance().Log(LogType.Warn, e.Message);
+            }
+        }
+
+        private static void HttpRequestProgress(HttpData data, long progress, long total)
+        {
+            if (!Lua.check_active_state(data.L))
+            {
+                return;
+            }
+
+            if (data.progressReference == 0)
+                return;
+
+            Lua.lua_rawgeti(data.L, Lua.LUA_REGISTRYINDEX, data.progressReference);
+            Lua.lua_pushinteger(data.L, data.id);
+            Lua.lua_pushinteger(data.L, progress);
+            Lua.lua_pushinteger(data.L, total);
+            Lua.lua_pcall(data.L, 3, 0, 0);
+        }
+
+        private static void HttpRequestDone(HttpData data, string result)
+        {
+            if (!Lua.check_active_state(data.L))
+            {
+                return;
+            }
+
+            Lua.lua_rawgeti(data.L, Lua.LUA_REGISTRYINDEX, data.functionReference);
+            Lua.lua_pushlstring(data.L, result, result.Length);
+            Lua.lua_pushinteger(data.L, data.id);
+            Lua.lua_pcall(data.L, 2, 0, 0);
+            Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.functionReference);
+            Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.progressReference);
         }
 
         private static int luaF_createconsole(IntPtr L)
@@ -371,7 +463,7 @@ namespace SharpBLT
         private static int luaF_removeDirectory(IntPtr L)
         {
             string dir = Lua.lua_tolstring(L, 1, out var len);
-            
+
             try
             {
                 Directory.Delete(dir); // why no TryDelete or something ?!?!?!
@@ -452,7 +544,7 @@ namespace SharpBLT
                     directories = Directory.GetDirectories(dir, "*.*", SearchOption.TopDirectoryOnly); // FIXME? untested yet
             }
             catch (Exception)
-	        {
+            {
                 Lua.lua_pushboolean(L, false);
                 return 1;
             }

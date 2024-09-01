@@ -507,7 +507,7 @@ namespace SharpBLT
             return ret;
         }
 
-        private static bool check_active_state(IntPtr L)
+        internal static bool check_active_state(IntPtr L)
         {
             foreach (var it in ms_activeStates)
             {
