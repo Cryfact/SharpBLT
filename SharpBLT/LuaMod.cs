@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SharpBLT
@@ -26,6 +27,7 @@ namespace SharpBLT
         public static void Initialize(IntPtr L)
         {
             Lua.lua_pushcclosure(L, luaF_print, 0);
+
             Lua.lua_setfield(L, Lua.LUA_GLOBALSINDEX, "log");
 
             Lua.lua_pushcclosure(L, luaF_pcall, 0);
@@ -46,7 +48,6 @@ namespace SharpBLT
             };
 
             Lua.luaI_openlib(L, "console", consoleLib, 0);
-
 
             LuaReg[] fileLib = {
                 new("GetDirectories", luaF_getdir),

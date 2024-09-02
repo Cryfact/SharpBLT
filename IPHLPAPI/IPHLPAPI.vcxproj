@@ -60,7 +60,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>hostfxr/lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>nethost.lib;libnethost.lib;ijwhost.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iphp.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -85,7 +85,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>hostfxr/lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>nethost.lib;libnethost.lib;ijwhost.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iphp.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

@@ -17,16 +17,19 @@ namespace SharpBLT
 
         }
 
-        [UnmanagedCallersOnly]
-        public static void Main()
+        public static void Main(string[] args)
+        { }
+
+        [UnmanagedCallersOnly(EntryPoint = "NativeMain")]
+        public static void NativeMain()
         {
             ValidateModDirectories();
 
-#if DEBUG
+//#if DEBUG
             User32.MessageBox(IntPtr.Zero, "Debug Me", "Debug Me", User32.MB_OK);
-#else
-            if (File.Exists("mods/developer.txt"))
-#endif
+//#else
+//            if (File.Exists("mods/developer.txt"))
+//#endif
             Logger.Instance().OpenConsole();
             
             Game.Initialize();

@@ -1,11 +1,16 @@
 #include <Windows.h>
+
+#define __USING_NATIVE_AOT__
+
+#ifndef __USING_NATIVE_AOT__
 #include <hostfxr.h>
 #include <nethost.h>
 #include <coreclr_delegates.h>
+#endif
+
 #include <string>
 #include <shlwapi.h>
 #include "DotNetHost.h"
-
 
 #ifdef UNICODE
 using string = std::wstring;
@@ -13,9 +18,12 @@ using string = std::wstring;
 using string = std::string;
 #endif
 
+#ifndef __USING_NATIVE_AOT__
 static hostfxr_initialize_for_runtime_config_fn init_fptr;
 static hostfxr_get_runtime_delegate_fn get_delegate_fptr;
 static hostfxr_close_fn close_fptr;
+#endif
+
 
 void LoadDotNetRuntime()
 {
@@ -26,6 +34,15 @@ void LoadDotNetRuntime()
 
     runtimePath.resize(std::wcslen(runtimePath.data()));
 
+#ifdef __USING_NATIVE_AOT__
+    using EntryPointFn = void(*)(); 
+
+    HMODULE hModule = LoadLibraryA("mods\\base\\SharpBLT.dll");
+
+    auto entrypoint = reinterpret_cast<EntryPointFn>(GetProcAddress(hModule, "NativeMain"));
+
+    entrypoint();
+#else
     char_t buffer[MAX_PATH];
     size_t buffer_size = sizeof(buffer) / sizeof(char_t);
     int rc = get_hostfxr_path(buffer, &buffer_size, nullptr);
@@ -68,4 +85,5 @@ void LoadDotNetRuntime()
         UNMANAGEDCALLERSONLY_METHOD, nullptr, reinterpret_cast<void**>(&entryPoint));
 
     entryPoint();
+#endif
 }

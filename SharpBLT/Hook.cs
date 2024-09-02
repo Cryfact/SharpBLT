@@ -72,9 +72,6 @@ namespace SharpBLT
 
             Marshal.Copy(m_newBytes, 0, m_address, m_newBytes.Length);
 
-            Console.Write("Applied Bytes: ");
-            ConsoleEx.WriteLine(m_address, m_newBytes.Length);
-
             HookMemoryExecuteOnly(m_address, m_origBytes.Length);
 
             IsEnabled = true;
@@ -90,9 +87,6 @@ namespace SharpBLT
             HookMemoryExecuteReadWrite(m_address, m_origBytes.Length);
 
             Marshal.Copy(m_origBytes, 0, m_address, m_origBytes.Length);
-
-            Console.Write("Restored Bytes: ");
-            ConsoleEx.WriteLine(m_address, m_newBytes.Length);
 
             HookMemoryExecuteOnly(m_address, m_origBytes.Length);
 
@@ -154,7 +148,6 @@ namespace SharpBLT
             var dst = m_address.ToInt64();
 
             bool isNearTargetFunc = Math.Abs(dst - src + 5) <= 0x7FFFFFFF;
-            Console.WriteLine($"Math.Abs(dst - src + 5): ");
             if (!isNearTargetFunc)
             {
                 // perform 64 bit jump

@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
+    <OutputType>Library</OutputType>
+	<PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>

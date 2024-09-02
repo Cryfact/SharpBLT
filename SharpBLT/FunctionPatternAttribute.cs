@@ -1,11 +1,11 @@
 ﻿
 namespace SharpBLT
 {
-    public sealed class FunctionPattern : Attribute
+    public sealed class FunctionPatternAttribute : Attribute
     {
         public string Pattern { get; }
 
-        public FunctionPattern(string pattern) 
+        public FunctionPatternAttribute(string pattern) 
         {
             Pattern = pattern;
         }
