@@ -22,4 +22,4 @@ packages/**/src
 **/CMakeLists.txt.user
 **/CMakeSettings.json
 *.code-workspace
-/SharpBLT/Properties/PublishProfiles
+**/PublishProfiles
