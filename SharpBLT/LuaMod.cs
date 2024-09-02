@@ -307,8 +307,11 @@ namespace SharpBLT
             string archivePath = Lua.lua_tolstring(L, 1, out _);
             string extractPath = Lua.lua_tolstring(L, 1, out _);
 
-            // TODO: Implement this
-            // pd2hook::ExtractZIPArchive(archivePath, extractPath);
+            using ZipArchive archive = ZipFile.OpenRead(archivePath);
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                entry.ExtractToFile(Path.Combine(extractPath, entry.FullName));
+            }
 
             return 0;
         }
