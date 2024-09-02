@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="HttpClientFactory" Version="1.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="SharpDisasm\Udis86\OpTable.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>OpTable.cs</LastGenOutput>

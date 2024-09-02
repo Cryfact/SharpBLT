@@ -1,10 +1,5 @@
 ﻿
-using System;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Threading;
+using HttpClientFactory.Impl;
 
 namespace SharpBLT
 {
@@ -12,16 +7,9 @@ namespace SharpBLT
     {
         const int HTTP_BUFFER_SIZE = 81920; // 80kB
 
-        static HttpClientHandler _httpClientHandler = new()
-        {
-            AllowAutoRedirect = true,
-            ClientCertificateOptions = ClientCertificateOption.Automatic,
-            UseCookies = false,
-        };
-        static HttpClient _httpClient = new(_httpClientHandler)
-        {
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+        private static readonly object _httpClientLock = new();
+        private static readonly PerHostHttpClientFactory _httpClientFactory = new();
+
         static int _httpRequestCounter = 0;
 
         public static void Initialize(IntPtr L)
@@ -351,7 +339,7 @@ namespace SharpBLT
             _httpRequestCounter++;
             int requestId = _httpRequestCounter;
 
-            var req = DoHttpReqAsync(
+            _ = DoHttpReqAsync(
                 url,
                 new()
                 {
@@ -373,37 +361,44 @@ namespace SharpBLT
         {
             try
             {
-                using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                var httpClient = _httpClientFactory.GetHttpClient(url);
+                using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var contentLength = response.Content.Headers.ContentLength;
-
                 using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
                 using var target = new MemoryStream();
 
                 if (onProgress == null || !contentLength.HasValue)
                 {
                     // Ignore progress reporting when there is no handler or the content length is unknown
-                    await source.CopyToAsync(target);
+                    await source.CopyToAsync(target, HTTP_BUFFER_SIZE, cancellationToken);
                 }
                 else
                 {
                     var buffer = new byte[HTTP_BUFFER_SIZE];
+                    long totalBytes = contentLength.Value;
                     long totalBytesRead = 0;
                     int bytesRead;
                     while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
                     {
                         await target.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
                         totalBytesRead += bytesRead;
-                        onProgress.Invoke(data, totalBytesRead, contentLength.Value);
+                        lock (_httpClientLock)
+                            onProgress.Invoke(data, totalBytesRead, totalBytes);
                     }
-                    onProgress.Invoke(data, contentLength.Value, contentLength.Value);
+                    lock (_httpClientLock)
+                        onProgress.Invoke(data, totalBytes, totalBytes);
                 }
 
+                Logger.Instance().Log(LogType.Log, $"{url} - {data.functionReference} returned!");
+
                 using StreamReader reader = new(target);
-                onDone.Invoke(data, reader.ReadToEnd());
+                var result = reader.ReadToEnd();
+                lock (_httpClientLock)
+                    onDone.Invoke(data, result);
             }
             catch (Exception e)
             {
-                Logger.Instance().Log(LogType.Warn, e.Message);
+                Logger.Instance().Log(LogType.Warn, e.Message + Environment.NewLine + e.StackTrace);
             }
         }
 
@@ -419,8 +414,8 @@ namespace SharpBLT
 
             Lua.lua_rawgeti(data.L, Lua.LUA_REGISTRYINDEX, data.progressReference);
             Lua.lua_pushinteger(data.L, data.id);
-            Lua.lua_pushinteger(data.L, progress);
-            Lua.lua_pushinteger(data.L, total);
+            Lua.lua_pushinteger(data.L, (int)progress);
+            Lua.lua_pushinteger(data.L, (int)total);
             Lua.lua_pcall(data.L, 3, 0, 0);
         }
 
@@ -435,6 +430,7 @@ namespace SharpBLT
             Lua.lua_pushlstring(data.L, result, result.Length);
             Lua.lua_pushinteger(data.L, data.id);
             Lua.lua_pcall(data.L, 2, 0, 0);
+
             Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.functionReference);
             Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.progressReference);
         }
