@@ -1,7 +1,9 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
+
 namespace SharpBLT
 {
-    public class Singleton<T>
+    public class Singleton<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>
     {
         public static T? ms_instance;
 
