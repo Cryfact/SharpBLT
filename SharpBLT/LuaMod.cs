@@ -1,5 +1,6 @@
 ﻿
 using HttpClientFactory.Impl;
+using System.IO.Compression;
 
 namespace SharpBLT
 {
@@ -67,7 +68,7 @@ namespace SharpBLT
 
             if (result == Lua.LUA_ERRSYNTAX)
             {
-                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out var len));
+                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
                 return;
             }
 
@@ -75,7 +76,7 @@ namespace SharpBLT
 
             if (result == Lua.LUA_ERRRUN)
             {
-                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out var len));
+                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
                 return;
             }
         }
@@ -220,7 +221,7 @@ namespace SharpBLT
 
             for (int i = 0; i < top; ++i)
             {
-                string str = Lua.lua_tolstring(L, i + 1, out var len);
+                string str = Lua.lua_tolstring(L, i + 1, out _);
                 Logger.Instance().Log(LogType.Lua, (i > 0 ? "    " : "") + str);
             }
 
@@ -244,7 +245,7 @@ namespace SharpBLT
             // the error message onto the stack, which should manually be popped off when done using to keep the stack balanced
             if (result == Lua.LUA_ERRRUN)
             {
-                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out var len));
+                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
                 // This call pops the error message off the stack
                 Lua.lua_pop(L, 1);
                 return 0;
@@ -264,14 +265,14 @@ namespace SharpBLT
         {
             int n = Lua.lua_gettop(L);
 
-            string filename = Lua.lua_tolstring(L, 1, out var length);
+            string filename = Lua.lua_tolstring(L, 1, out _);
 
             //Logger.Instance().Log(LogType.Lua, $"luaF_dofile: {filename}");
 
             int error = Lua.luaL_loadfilex(L, filename);
             if (error != 0)
             {
-                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out var len));
+                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
             }
             else
             {
@@ -289,7 +290,7 @@ namespace SharpBLT
                 error = Lua.lua_pcall(L, 0, 0, errorhandler);
                 if (error == Lua.LUA_ERRRUN)
                 {
-                    Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out var len));
+                    Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
                     // This call pops the error message off the stack
                     Lua.lua_pop(L, 1);
                 }
@@ -303,8 +304,8 @@ namespace SharpBLT
 
         private static int luaF_unzipfile(IntPtr L)
         {
-            string archivePath = Lua.lua_tolstring(L, 1, out var length);
-            string extractPath = Lua.lua_tolstring(L, 1, out length);
+            string archivePath = Lua.lua_tolstring(L, 1, out _);
+            string extractPath = Lua.lua_tolstring(L, 1, out _);
 
             // TODO: Implement this
             // pd2hook::ExtractZIPArchive(archivePath, extractPath);
@@ -332,7 +333,7 @@ namespace SharpBLT
             }
 
             int functionReference = Lua.luaL_ref(L, Lua.LUA_REGISTRYINDEX);
-            string url = Lua.lua_tolstring(L, 1, out int len);
+            string url = Lua.lua_tolstring(L, 1, out _);
 
             Logger.Instance().Log(LogType.Log, $"{url} - {functionReference}");
 
@@ -459,7 +460,7 @@ namespace SharpBLT
 
         private static int luaF_removeDirectory(IntPtr L)
         {
-            string dir = Lua.lua_tolstring(L, 1, out var len);
+            string dir = Lua.lua_tolstring(L, 1, out _);
 
             try
             {
@@ -476,7 +477,7 @@ namespace SharpBLT
 
         private static int luaF_directoryExists(IntPtr L)
         {
-            string dir = Lua.lua_tolstring(L, 1, out var len);
+            string dir = Lua.lua_tolstring(L, 1, out _);
 
             Lua.lua_pushboolean(L, Directory.Exists(dir));
 
@@ -487,7 +488,7 @@ namespace SharpBLT
         {
             int n = Lua.lua_gettop(L);
 
-            string dir = Lua.lua_tolstring(L, 1, out var len);
+            string dir = Lua.lua_tolstring(L, 1, out _);
 
             // TODO: Implement this
             //string hash = pd2hook::Util::GetDirectoryHash(filename);
@@ -500,7 +501,7 @@ namespace SharpBLT
         {
             int n = Lua.lua_gettop(L);
 
-            string dir = Lua.lua_tolstring(L, 1, out var len);
+            string dir = Lua.lua_tolstring(L, 1, out _);
 
             // TODO: Implement this
             //string hash = pd2hook::Util::GetFileHash(filename);
@@ -512,8 +513,8 @@ namespace SharpBLT
         private static int luaF_moveDirectory(IntPtr L)
         {
             int n = Lua.lua_gettop(L);
-            string src = Lua.lua_tolstring(L, 1, out var srclen);
-            string dst = Lua.lua_tolstring(L, 1, out var dstlen);
+            string src = Lua.lua_tolstring(L, 1, out _);
+            string dst = Lua.lua_tolstring(L, 1, out _);
 
             try
             {
@@ -530,7 +531,7 @@ namespace SharpBLT
 
         private static int luaH_getcontents(IntPtr L, bool files)
         {
-            string dir = Lua.lua_tolstring(L, 1, out var len);
+            string dir = Lua.lua_tolstring(L, 1, out _);
             string[] directories;
 
             try
