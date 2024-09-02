@@ -1,16 +1,10 @@
 ﻿
-using HttpClientFactory.Impl;
 using System.IO.Compression;
 
 namespace SharpBLT
 {
     public class LuaMod
     {
-        const int HTTP_BUFFER_SIZE = 81920; // 80kB
-
-        private static readonly object _httpClientLock = new();
-        private static readonly PerHostHttpClientFactory _httpClientFactory = new();
-
         static int _httpRequestCounter = 0;
 
         public static void Initialize(IntPtr L)
@@ -343,9 +337,9 @@ namespace SharpBLT
             _httpRequestCounter++;
             int requestId = _httpRequestCounter;
 
-            _ = DoHttpReqAsync(
+            _ = Http.DoHttpReqAsync(
                 url,
-                new()
+                new HttpData()
                 {
                     id = requestId,
                     functionReference = functionReference,
@@ -359,51 +353,6 @@ namespace SharpBLT
             Lua.lua_pushinteger(L, requestId);
 
             return 1;
-        }
-
-        private async static Task DoHttpReqAsync(string url, HttpData data, Action<HttpData, string> onDone, Action<HttpData, long, long>? onProgress = null, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var httpClient = _httpClientFactory.GetHttpClient(url);
-                using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                var contentLength = response.Content.Headers.ContentLength;
-                using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
-                using var target = new MemoryStream();
-
-                if (onProgress == null || !contentLength.HasValue)
-                {
-                    // Ignore progress reporting when there is no handler or the content length is unknown
-                    await source.CopyToAsync(target, HTTP_BUFFER_SIZE, cancellationToken);
-                }
-                else
-                {
-                    var buffer = new byte[HTTP_BUFFER_SIZE];
-                    long totalBytes = contentLength.Value;
-                    long totalBytesRead = 0;
-                    int bytesRead;
-                    while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
-                    {
-                        await target.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
-                        totalBytesRead += bytesRead;
-                        lock (_httpClientLock)
-                            onProgress.Invoke(data, totalBytesRead, totalBytes);
-                    }
-                    lock (_httpClientLock)
-                        onProgress.Invoke(data, totalBytes, totalBytes);
-                }
-
-                Logger.Instance().Log(LogType.Log, $"{url} - {data.functionReference} returned!");
-
-                using StreamReader reader = new(target);
-                var result = reader.ReadToEnd();
-                lock (_httpClientLock)
-                    onDone.Invoke(data, result);
-            }
-            catch (Exception e)
-            {
-                Logger.Instance().Log(LogType.Warn, e.Message + Environment.NewLine + e.StackTrace);
-            }
         }
 
         private static void HttpRequestProgress(HttpData data, long progress, long total)
