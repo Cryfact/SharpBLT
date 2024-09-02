@@ -1,6 +1,6 @@
 // dllmain.cpp : Definiert den Einstiegspunkt für die DLL-Anwendung.
 #include <Windows.h>
-#include "DotNetHost.h"
+#include <DotNetHost.h>
 
 #pragma pack(1)
 

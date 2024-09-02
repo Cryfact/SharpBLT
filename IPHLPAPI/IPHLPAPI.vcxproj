@@ -53,7 +53,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>hostfxr/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../libDotNetHost</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -76,7 +76,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>hostfxr/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../libDotNetHost</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -91,13 +91,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="DotNetHost.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="iphp.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DotNetHost.h" />
+    <ProjectReference Include="..\libDotNetHost\libDotNetHost.vcxproj">
+      <Project>{7d849419-8aeb-4390-ae58-5c5ebc91c622}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

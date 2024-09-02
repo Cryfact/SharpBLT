@@ -11,13 +11,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
+    <ClInclude Include="DotNetHost.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="iphp.def">
+    <ClCompile Include="DotNetHost.cpp">
       <Filter>Quelldateien</Filter>
-    </None>
+    </ClCompile>
   </ItemGroup>
 </Project>
