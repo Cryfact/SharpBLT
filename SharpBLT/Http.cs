@@ -15,24 +15,25 @@ public sealed class Http
         {
             var httpClient = _httpClientFactory.GetHttpClient(url);
             using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            var contentLength = response.Content.Headers.ContentLength;
-            using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var len = response.Content.Headers.ContentLength;
+
             using var target = new MemoryStream();
 
-            if (onProgress == null || !contentLength.HasValue)
+            if (onProgress == null || !len.HasValue)
             {
-                // Ignore progress reporting when there is no handler or the content length is unknown
-                await source.CopyToAsync(target, HTTP_BUFFER_SIZE, cancellationToken);
+                // Ignore progress reporting when there is no handler
+                await response.Content.CopyToAsync(target, cancellationToken);
             }
             else
             {
+                using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
                 var buffer = new byte[HTTP_BUFFER_SIZE];
-                long totalBytes = contentLength.Value;
+                long totalBytes = len.Value;
                 long totalBytesRead = 0;
                 int bytesRead;
-                while ((bytesRead = await source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) != 0)
+                while ((bytesRead = await source.ReadAsync(buffer, cancellationToken)) != 0)
                 {
-                    await target.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+                    await target.WriteAsync(buffer, cancellationToken);
                     totalBytesRead += bytesRead;
                     lock (_httpClientLock)
                         onProgress.Invoke(data, totalBytesRead, totalBytes);
@@ -41,8 +42,12 @@ public sealed class Http
                     onProgress.Invoke(data, totalBytes, totalBytes);
             }
 
-            using StreamReader reader = new(target);
-            var result = reader.ReadToEnd();
+            // Reset pos for read
+            target.Position = 0;
+
+            // FIXME: binary (zip) breaks this!!
+            var result = System.Text.Encoding.Default.GetString(target.ToArray(), 0, (int)target.Length);
+
             lock (_httpClientLock)
                 onDone.Invoke(data, result);
         }

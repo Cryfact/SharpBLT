@@ -11,7 +11,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BLTHashLib\**" />
+    <EmbeddedResource Remove="BLTHashLib\**" />
+    <None Remove="BLTHashLib\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HttpClientFactory" Version="1.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="BLTHashLib\BLTHashLib\BLTHashLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>

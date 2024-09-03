@@ -1,5 +1,7 @@
 ﻿namespace SharpBLT;
 
+using BLTHashLib;
+using System.IO;
 using System.IO.Compression;
 
 public class LuaMod
@@ -258,7 +260,7 @@ public class LuaMod
 
     private static int luaF_dofile(IntPtr L)
     {
-        int n = Lua.lua_gettop(L);
+        //int n = Lua.lua_gettop(L);
 
         string filename = Lua.lua_tolstring(L, 1, out _);
 
@@ -299,6 +301,8 @@ public class LuaMod
 
     private static int luaF_unzipfile(IntPtr L)
     {
+        //int n = Lua.lua_gettop(L);
+
         string archivePath = Lua.lua_tolstring(L, 1, out _);
         string extractPath = Lua.lua_tolstring(L, 1, out _);
 
@@ -415,6 +419,8 @@ public class LuaMod
 
     private static int luaF_removeDirectory(IntPtr L)
     {
+        //int n = Lua.lua_gettop(L);
+
         string dir = Lua.lua_tolstring(L, 1, out _);
 
         try
@@ -435,6 +441,8 @@ public class LuaMod
 
     private static int luaF_directoryExists(IntPtr L)
     {
+        //int n = Lua.lua_gettop(L);
+
         string dir = Lua.lua_tolstring(L, 1, out _);
 
         Lua.lua_pushboolean(L, Directory.Exists(dir));
@@ -444,33 +452,34 @@ public class LuaMod
 
     private static int luaF_directoryhash(IntPtr L)
     {
-        int n = Lua.lua_gettop(L);
+        //int n = Lua.lua_gettop(L);
 
-        string dir = Lua.lua_tolstring(L, 1, out _);
+        string path = Lua.lua_tolstring(L, 1, out _);
 
-        // TODO: Implement this
-        //string hash = pd2hook::Util::GetDirectoryHash(filename);
-        //Lua.lua_pushlstring(L, hash, hash.Length);
+        string hash = Hasher.GetDirectoryHash(path);
+
+        Lua.lua_pushlstring(L, hash, hash.Length);
 
         return 1;
     }
 
     private static int luaF_filehash(IntPtr L)
     {
-        int n = Lua.lua_gettop(L);
+        //int n = Lua.lua_gettop(L);
 
-        string dir = Lua.lua_tolstring(L, 1, out _);
+        string path = Lua.lua_tolstring(L, 1, out _);
 
-        // TODO: Implement this
-        //string hash = pd2hook::Util::GetFileHash(filename);
-        //Lua.lua_pushlstring(L, hash, hash.Length);
+        string hash = Hasher.GetFileHash(path);
+
+        Lua.lua_pushlstring(L, hash, hash.Length);
 
         return 1;
     }
 
     private static int luaF_moveDirectory(IntPtr L)
     {
-        int n = Lua.lua_gettop(L);
+        //int n = Lua.lua_gettop(L);
+
         string src = Lua.lua_tolstring(L, 1, out _);
         string dst = Lua.lua_tolstring(L, 1, out _);
 
@@ -489,6 +498,8 @@ public class LuaMod
 
     private static int luaH_getcontents(IntPtr L, bool files)
     {
+        //int n = Lua.lua_gettop(L);
+
         string dir = Lua.lua_tolstring(L, 1, out _);
         string[] directories;
 
