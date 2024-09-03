@@ -303,13 +303,9 @@ public class LuaMod
         //int n = Lua.lua_gettop(L);
 
         string archivePath = Lua.lua_tolstring(L, 1, out _);
-        string extractPath = Lua.lua_tolstring(L, 1, out _);
+        string extractPath = Lua.lua_tolstring(L, 2, out _);
 
-        using ZipArchive archive = ZipFile.OpenRead(archivePath);
-        foreach (ZipArchiveEntry entry in archive.Entries)
-        {
-            entry.ExtractToFile(Path.Combine(extractPath, entry.FullName));
-        }
+        ZipFile.ExtractToDirectory(archivePath, extractPath);
 
         return 0;
     }
@@ -416,7 +412,7 @@ public class LuaMod
 
         try
         {
-            Directory.Delete(dir);
+            Directory.Delete(dir, true);
 
             Lua.lua_pushboolean(L, true);
         }
@@ -472,7 +468,7 @@ public class LuaMod
         //int n = Lua.lua_gettop(L);
 
         string src = Lua.lua_tolstring(L, 1, out _);
-        string dst = Lua.lua_tolstring(L, 1, out _);
+        string dst = Lua.lua_tolstring(L, 2, out _);
 
         try
         {
@@ -497,9 +493,9 @@ public class LuaMod
         try
         {
             if (!files)
-                directories = Directory.GetFiles(dir, "*.*", SearchOption.TopDirectoryOnly).Select((x) => Path.GetFileName(x)).ToArray();
+                directories = Directory.GetFiles(dir, "*", SearchOption.TopDirectoryOnly).Select((x) => Path.GetFileName(x)).ToArray();
             else
-                directories = Directory.GetDirectories(dir, "*.*", SearchOption.TopDirectoryOnly); // FIXME? untested yet
+                directories = Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly); // FIXME? untested yet
         }
         catch (Exception)
         {
