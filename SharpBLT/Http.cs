@@ -6,10 +6,9 @@ public sealed class Http
 {
     const int HTTP_BUFFER_SIZE = 81920; // 80kB
 
-    private static readonly object _httpClientLock = new();
     private static readonly PerHostHttpClientFactory _httpClientFactory = new();
 
-    public async static Task DoHttpReqAsync<T>(string url, T data, Action<T, byte[]> onDone, Action<T, long, long>? onProgress = null, CancellationToken cancellationToken = default)
+    public async static Task DoHttpReqAsync(string url, HttpEventData data, Action<HttpEventData, byte[]> onDone, Action<HttpEventData, long, long>? onProgress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -35,11 +34,9 @@ public sealed class Http
                 {
                     await target.WriteAsync(buffer, cancellationToken);
                     totalBytesRead += bytesRead;
-                    lock (_httpClientLock)
-                        onProgress.Invoke(data, totalBytesRead, totalBytes);
+                    HttpEventQueue.Instance().QueueProgressEvent(onProgress, data, totalBytesRead, totalBytes);
                 }
-                lock (_httpClientLock)
-                    onProgress.Invoke(data, totalBytes, totalBytes);
+                HttpEventQueue.Instance().QueueProgressEvent(onProgress, data, totalBytes, totalBytes);
             }
 
             // Reset pos for read
@@ -47,8 +44,7 @@ public sealed class Http
 
             byte[] result = target.ToArray();
 
-            lock (_httpClientLock)
-                onDone.Invoke(data, result);
+            HttpEventQueue.Instance().QueueDoneEvent(onDone, data, result);
         }
         catch (Exception e)
         {

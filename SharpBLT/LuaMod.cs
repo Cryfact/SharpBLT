@@ -314,15 +314,6 @@ public class LuaMod
         return 0;
     }
 
-    private struct HttpData
-    {
-        internal int id;
-        internal IntPtr L;
-        internal int functionReference;
-        internal int progressReference;
-        internal string url;
-    }
-
     private static int luaF_dohttpreq(IntPtr L)
     {
         Logger.Instance().Log(LogType.Log, "Incoming HTTP Request/Request");
@@ -344,7 +335,7 @@ public class LuaMod
 
         _ = Http.DoHttpReqAsync(
             url,
-            new HttpData()
+            new()
             {
                 id = requestId,
                 functionReference = functionReference,
@@ -361,7 +352,7 @@ public class LuaMod
         return 1;
     }
 
-    private static void HttpRequestProgress(HttpData data, long progress, long total)
+    private static void HttpRequestProgress(HttpEventData data, long progress, long total)
     {
         if (!Lua.check_active_state(data.L))
         {
@@ -378,7 +369,7 @@ public class LuaMod
         Lua.lua_pcall(data.L, 3, 0, 0);
     }
 
-    private static void HttpRequestDone(HttpData data, byte[] result)
+    private static void HttpRequestDone(HttpEventData data, byte[] result)
     {
         if (!Lua.check_active_state(data.L))
         {

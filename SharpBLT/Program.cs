@@ -31,6 +31,7 @@ public class Program
         if (File.Exists("mods/developer.txt"))
             Logger.Instance().OpenConsole();
 
+        Game.Initialize();
         Lua.Initialize();
     }
 }
