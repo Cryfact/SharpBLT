@@ -1,13 +1,7 @@
-﻿
-namespace SharpBLT
-{
-    public sealed class FunctionPatternAttribute : Attribute
-    {
-        public string Pattern { get; }
+﻿namespace SharpBLT;
 
-        public FunctionPatternAttribute(string pattern) 
-        {
-            Pattern = pattern;
-        }
-    }
+[AttributeUsage(AttributeTargets.Delegate)]
+public sealed class FunctionPatternAttribute(string pattern) : Attribute
+{
+    public string Pattern { get; } = pattern;
 }

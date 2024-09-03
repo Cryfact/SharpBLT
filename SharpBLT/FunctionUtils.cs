@@ -1,56 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace SharpBLT;
+
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SharpBLT
+public static class FunctionUtils
 {
-    public static class FunctionUtils
+    public static Hook<TDelegate> CreateHook<TDelegate>(string fieldName, TDelegate del) where TDelegate : Delegate
     {
-        public static Hook<TDelegate> CreateHook<TDelegate>(string fieldName, TDelegate del) where TDelegate : Delegate
-        {
-            var attr = typeof(TDelegate).GetCustomAttribute<FunctionPatternAttribute>();
+        var attr = typeof(TDelegate).GetCustomAttribute<FunctionPatternAttribute>() ?? throw new Exception($"No Function Pattern");
 
-            if (attr == null)
-                throw new Exception($"No Function Pattern");
+        var pattern = new SearchPattern(attr.Pattern);
 
-            var pattern = new SearchPattern(attr.Pattern);
+        var addr = pattern.Match(SearchRange.GetStartSearchAddress(), SearchRange.GetSearchSize());
 
-            var addr = pattern.Match(SearchRange.GetStartSearchAddress(), SearchRange.GetSearchSize());
+        if (addr == IntPtr.Zero)
+            throw new Exception($"Failed to resolve Method '{fieldName}'");
 
-            if (addr == IntPtr.Zero)
-                throw new Exception($"Failed to resolve Method '{fieldName}'");
+        Logger.Instance().Log(LogType.Log, $"Address for '{fieldName}' found: 0x{addr:X8}");
 
-            Logger.Instance().Log(LogType.Log, $"Address for '{fieldName}' found: 0x{addr:X8}");
+        return new Hook<TDelegate>(addr, del);
+    }
 
-            return new Hook<TDelegate>(addr, del);
-        }
+    public static TDelegate ResolveFunction<TDelegate>(string fieldName) where TDelegate : Delegate
+    {
+        var attr = typeof(TDelegate).GetCustomAttribute<FunctionPatternAttribute>() ?? throw new Exception($"No Function Pattern");
 
-        public static TDelegate ResolveFunction<TDelegate>(string fieldName) where TDelegate : Delegate
-        {
-            var attr = typeof(TDelegate).GetCustomAttribute<FunctionPatternAttribute>();
+        var pattern = new SearchPattern(attr.Pattern);
 
-            if (attr == null)
-                throw new Exception($"No Function Pattern");
+        var addr = pattern.Match(SearchRange.GetStartSearchAddress(), SearchRange.GetSearchSize());
 
-            var pattern = new SearchPattern(attr.Pattern);
+        if (addr == IntPtr.Zero)
+            throw new Exception($"Failed to resolve Method '{fieldName}'");
 
-            var addr = pattern.Match(SearchRange.GetStartSearchAddress(), SearchRange.GetSearchSize());
+        Logger.Instance().Log(LogType.Log, $"Address for '{fieldName}' found: 0x{addr:X8}");
 
-            if (addr == IntPtr.Zero)
-                throw new Exception($"Failed to resolve Method '{fieldName}'");
+        var res = Marshal.GetDelegateForFunctionPointer<TDelegate>(addr) ?? throw new Exception("Failed to create delegate for function pointer");
 
-            Logger.Instance().Log(LogType.Log, $"Address for '{fieldName}' found: 0x{addr:X8}");
-
-            var res = Marshal.GetDelegateForFunctionPointer<TDelegate>(addr);
-
-            if (res == null)
-                throw new Exception("Failed to create delegate for function pointer");
-
-            return res;
-        }
+        return res;
     }
 }

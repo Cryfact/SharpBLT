@@ -1,20 +1,18 @@
-﻿
+﻿namespace SharpBLT;
+
 using System.Diagnostics.CodeAnalysis;
 
-namespace SharpBLT
+public class Singleton<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>
 {
-    public class Singleton<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>
+    private static T? ms_instance;
+
+    public Singleton()
+    { }
+
+    public static T Instance()
     {
-        public static T? ms_instance;
+        ms_instance ??= Activator.CreateInstance<T>();
 
-        public Singleton()
-        { }
-
-        public static T Instance()
-        {
-            ms_instance ??= Activator.CreateInstance<T>();
-
-            return ms_instance;
-        }
+        return ms_instance;
     }
 }

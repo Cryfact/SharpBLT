@@ -1,15 +1,7 @@
-﻿
-namespace SharpBLT
-{
-    public struct LuaReg
-    {
-        public string Name;
-        public Lua.LuaCallback Function;
+﻿namespace SharpBLT;
 
-        public LuaReg(string name, Lua.LuaCallback func)
-        {
-            Name = name;
-            Function = func;
-        }
-    }
+public struct LuaReg(string name, Lua.LuaCallback func)
+{
+    public string Name = name;
+    public Lua.LuaCallback Function = func;
 }

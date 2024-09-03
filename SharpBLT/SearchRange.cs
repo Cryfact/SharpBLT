@@ -1,36 +1,34 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace SharpBLT;
 
-namespace SharpBLT
+using System.Runtime.CompilerServices;
+
+public sealed class SearchRange
 {
-    public sealed class SearchRange
+    private static readonly IntPtr ms_startSearchAddress;
+    private static readonly int ms_searchSize;
+
+    static SearchRange()
     {
-        private static readonly IntPtr ms_startSearchAddress;
-        private static readonly int ms_searchSize;
+        var hModule = Kernel32.GetModuleHandle(null);
 
-        static SearchRange()
-        {
-            var modinfo = new Psapi.MODULEINFO();
-            var hModule = Kernel32.GetModuleHandle(null);
+        if (hModule == IntPtr.Zero)
+            throw new Exception("Failed to get current Module Handle");
 
-            if (hModule == IntPtr.Zero)
-                throw new Exception("Failed to get current Module Handle");
+        Psapi.GetModuleInformation(Kernel32.GetCurrentProcess(), hModule, out Psapi.MODULEINFO modinfo);
 
-            Psapi.GetModuleInformation(Kernel32.GetCurrentProcess(), hModule, out modinfo);
+        ms_startSearchAddress = modinfo.lpBaseOfDll;
+        ms_searchSize = (int)modinfo.SizeOfImage;
+    }
 
-            ms_startSearchAddress = modinfo.lpBaseOfDll;
-            ms_searchSize = (int)modinfo.SizeOfImage;
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IntPtr GetStartSearchAddress()
+    {
+        return ms_startSearchAddress;
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IntPtr GetStartSearchAddress()
-        {
-            return ms_startSearchAddress;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetSearchSize()
-        {
-            return ms_searchSize;
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetSearchSize()
+    {
+        return ms_searchSize;
     }
 }
