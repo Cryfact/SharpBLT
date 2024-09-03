@@ -32,7 +32,7 @@ public sealed class Http
                 int bytesRead;
                 while ((bytesRead = await source.ReadAsync(buffer, cancellationToken)) != 0)
                 {
-                    await target.WriteAsync(buffer, cancellationToken);
+                    await target.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
                     totalBytesRead += bytesRead;
                     HttpEventQueue.Instance().QueueProgressEvent(onProgress, data, totalBytesRead, totalBytes);
                 }
