@@ -7,7 +7,7 @@ public static class Hasher
 {
     private static void GetDirectories(HashAlgorithm sha, string directory, Dictionary<string, string> dict)
     {
-        foreach (var path in Directory.GetFiles(directory, "*.*"))
+        foreach (var path in Directory.GetFiles(directory, "*.*", SearchOption.TopDirectoryOnly))
         {
             using var stream = File.OpenRead(path);
             var hash = sha.ComputeHash(stream);

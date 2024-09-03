@@ -454,11 +454,11 @@ public sealed class Lua
         lua_close(L);
     }
 
-    private unsafe static IntPtr luaL_newstate_new(IntPtr thislol, bool no, bool freakin, int clue)
+    private unsafe static IntPtr luaL_newstate_new(IntPtr _this, bool unk0, bool unk1, int unk2)
     {
-        var ret = luaL_newstate(thislol, no, freakin, clue);
+        var ret = luaL_newstate(_this, unk0, unk1, unk2);
 
-        IntPtr L = new(*(void**)thislol.ToPointer());
+        IntPtr L = new(*(void**)_this.ToPointer());
 
         if (L == IntPtr.Zero)
             return ret;

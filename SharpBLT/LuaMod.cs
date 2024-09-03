@@ -391,7 +391,8 @@ public class LuaMod
         Lua.lua_pcall(data.L, 2, 0, 0);
 
         Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.functionReference);
-        Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.progressReference);
+        if (data.progressReference != 0)
+            Lua.luaL_unref(data.L, Lua.LUA_REGISTRYINDEX, data.progressReference);
     }
 
     private static int luaF_createconsole(IntPtr L)
