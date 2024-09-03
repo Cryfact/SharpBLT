@@ -483,7 +483,7 @@ public sealed class Lua
 
     private static void add_active_state(IntPtr L)
     {
-        Logger.Instance().Log(LogType.Log, $"Lua State activated: {L}");
+        Logger.Instance().Log(LogType.Log, $"Lua-state activated: {L}");
         ms_activeStates.Add(L);
     }
 

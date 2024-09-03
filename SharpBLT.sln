@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libDotNetHost", "libDotNetH
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Loader", "Loader", "{0AD251BB-31AB-4D91-8996-9C785B20C561}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLTHashLib", "SharpBLT\BLTHashLib\BLTHashLib\BLTHashLib.csproj", "{199BBC18-9AD7-43E6-AFB7-5F0A6D1457B7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -36,10 +34,6 @@ Global
 		{7D849419-8AEB-4390-AE58-5C5EBC91C622}.Debug|x64.Build.0 = Debug|x64
 		{7D849419-8AEB-4390-AE58-5C5EBC91C622}.Release|x64.ActiveCfg = Release|x64
 		{7D849419-8AEB-4390-AE58-5C5EBC91C622}.Release|x64.Build.0 = Release|x64
-		{199BBC18-9AD7-43E6-AFB7-5F0A6D1457B7}.Debug|x64.ActiveCfg = Debug|x64
-		{199BBC18-9AD7-43E6-AFB7-5F0A6D1457B7}.Debug|x64.Build.0 = Debug|x64
-		{199BBC18-9AD7-43E6-AFB7-5F0A6D1457B7}.Release|x64.ActiveCfg = Release|Any CPU
-		{199BBC18-9AD7-43E6-AFB7-5F0A6D1457B7}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
