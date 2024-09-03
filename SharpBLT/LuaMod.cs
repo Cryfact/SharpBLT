@@ -54,7 +54,7 @@ namespace SharpBLT
 
             Lua.luaI_openlib(L, "blt", bltLib, 0);
 
-            Logger.Instance().Log(LogType.Log, "Initiating Hook");
+            Logger.Instance().Log(LogType.Log, $"Loading SharpBLT Lua base mod onto {L}");
 
             validate_mod_base();
 
@@ -73,6 +73,8 @@ namespace SharpBLT
                 Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
                 return;
             }
+
+            Logger.Instance().Log(LogType.Log, $"SharpBLT on {L} ready!");
         }
 
         private static void validate_mod_base()
@@ -316,6 +318,7 @@ namespace SharpBLT
             internal IntPtr L;
             internal int functionReference;
             internal int progressReference;
+            internal string url;
         }
 
         private static int luaF_dohttpreq(IntPtr L)
@@ -332,10 +335,10 @@ namespace SharpBLT
             int functionReference = Lua.luaL_ref(L, Lua.LUA_REGISTRYINDEX);
             string url = Lua.lua_tolstring(L, 1, out _);
 
-            Logger.Instance().Log(LogType.Log, $"{url} - {functionReference}");
-
             _httpRequestCounter++;
             int requestId = _httpRequestCounter;
+
+            Logger.Instance().Log(LogType.Log, $"{url} - (request {requestId}) sent..");
 
             _ = Http.DoHttpReqAsync(
                 url,
@@ -345,6 +348,7 @@ namespace SharpBLT
                     functionReference = functionReference,
                     progressReference = progressReference,
                     L = L,
+                    url = url,
                 },
                 HttpRequestDone,
                 progressReference != 0 ? HttpRequestProgress : null

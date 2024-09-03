@@ -144,7 +144,7 @@ namespace SharpBLT
 
         [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 41 0F B6 F8 0F B6 F2 48 8B D9 45 85 C9")]
         [UnmanagedFunctionPointer(DefaultCallingConvention)]
-        public delegate IntPtr luaL_newstate_fn(IntPtr arg0, [MarshalAs(UnmanagedType.I1)] bool arg2, 
+        public delegate IntPtr luaL_newstate_fn(IntPtr arg0, [MarshalAs(UnmanagedType.I1)] bool arg2,
                                              [MarshalAs(UnmanagedType.I1)] bool arg3, int arg4);
 
 #pragma warning disable CS0649
@@ -387,26 +387,26 @@ namespace SharpBLT
         {
             lua_getglobal(L, "NotifyErrorOverlay");
 
-	        if (lua_isfunction(L, -1))
-	        {
-		        int args = 0;
+            if (lua_isfunction(L, -1))
+            {
+                int args = 0;
 
-		        if (message != null)
-		        {
-			        lua_pushstring(L, message);
+                if (message != null)
+                {
+                    lua_pushstring(L, message);
                     args = 1;
-		        }
+                }
 
                 int error = lua_pcall(L, args, 0, 0);
 
-		        if (error == LUA_ERRRUN)
-		        {
-			        // Don't bother logging the error since the error overlay is designed to be an optional component, just pop the error
-			        // message off the stack to keep it balanced
-			        lua_pop(L, 1);
-			        return;
-		        }
-	        }
+                if (error == LUA_ERRRUN)
+                {
+                    // Don't bother logging the error since the error overlay is designed to be an optional component, just pop the error
+                    // message off the stack to keep it balanced
+                    lua_pop(L, 1);
+                    return;
+                }
+            }
             else
             {
                 lua_pop(L, 1);
@@ -435,7 +435,7 @@ namespace SharpBLT
 
                 if (message != null)
                 {
-                   // Logger.Instance().Log(LogType.Error, message);
+                    // Logger.Instance().Log(LogType.Error, message);
 
                     NotifyErrorOverlay(L, message);
                     // This call pops the error message off the stack
@@ -446,7 +446,7 @@ namespace SharpBLT
             lua_remove(L, errorhandler);
         }
 
-        private static void luaF_close(IntPtr L) 
+        private static void luaF_close(IntPtr L)
         {
             remove_active_state(L);
             lua_close(L);
@@ -457,8 +457,6 @@ namespace SharpBLT
             var ret = luaL_newstate(thislol, no, freakin, clue);
 
             IntPtr L = new IntPtr(*((void**)thislol.ToPointer()));
-
-          //  PD2HOOK_LOG_LOG("Lua State: 0x{0:016x}", reinterpret_cast<uint64_t>(L));
 
             if (L == IntPtr.Zero)
                 return ret;
@@ -483,12 +481,14 @@ namespace SharpBLT
 
         private static void add_active_state(IntPtr L)
         {
+            Logger.Instance().Log(LogType.Log, $"Lua State activated: {L}");
             ms_activeStates.Add(L);
         }
 
         private static void remove_active_state(IntPtr L)
         {
             ms_activeStates.Remove(L);
+            Logger.Instance().Log(LogType.Log, $"Lua-state closed: {L}");
         }
     }
 }

@@ -26,12 +26,20 @@ namespace SharpBLT
             CurrentLogLevel = LogType.Debug;
 
             string path = "mods/logs/";
-            path += DateTime.Now.ToString("dd-MM-yyyy hh-mm-ss");
+            path += DateTime.Now.ToString("yyyy-MM-dd");
             path += "_log.txt";
 
             m_logFileStream = new FileStream(path, FileMode.Append, FileAccess.Write);
             m_writer = new StreamWriter(m_logFileStream);
             m_lock = new object();
+        }
+
+        static string? thisPath = null;
+
+        private static string GetThisPath([CallerFilePath] string? path = null)
+        {
+            thisPath ??= Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
+            return thisPath!;
         }
 
         public virtual void Log(LogType logType, string message, [CallerFilePath] string? file = null, [CallerMemberName] string? member = null, [CallerLineNumber] int line = 0)
@@ -41,7 +49,9 @@ namespace SharpBLT
 
             var time = DateTime.Now;
             var strlogType = GetLogTypeString(logType);
-            var msg = string.Format("{0} {1}: ({2}:{3}) {4}", time, strlogType, file, line, message);
+
+            var strippedFile = file!.Replace(GetThisPath(), string.Empty);
+            var msg = string.Format("{0} {1}: ({2}:{3}) {4}", time, strlogType, strippedFile, line, message);
 
             lock (m_lock)
             {
@@ -80,7 +90,7 @@ namespace SharpBLT
         }
 
         public void OpenConsole()
-        { 
+        {
             lock (m_lock)
             {
                 m_console = new ConsoleEx();
