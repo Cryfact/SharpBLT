@@ -342,6 +342,12 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void lua_pushlstring(IntPtr L, IntPtr arg0, int length)
+    {
+        lua_pushlstring_ptr(L, arg0, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_pushcclosure(IntPtr L, LuaCallback func, int arg1)
     {
         lua_pushcclosure_ptr(L, Marshal.GetFunctionPointerForDelegate(func), arg1);

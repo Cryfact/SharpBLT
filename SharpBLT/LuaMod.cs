@@ -3,6 +3,7 @@
 using BLTHashLib;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 public class LuaMod
 {
@@ -379,7 +380,7 @@ public class LuaMod
         Lua.lua_pcall(data.L, 3, 0, 0);
     }
 
-    private static void HttpRequestDone(HttpData data, string result)
+    private static void HttpRequestDone(HttpData data, byte[] result)
     {
         if (!Lua.check_active_state(data.L))
         {
@@ -387,7 +388,7 @@ public class LuaMod
         }
 
         Lua.lua_rawgeti(data.L, Lua.LUA_REGISTRYINDEX, data.functionReference);
-        Lua.lua_pushlstring(data.L, result, result.Length);
+        Lua.lua_pushlstring(data.L, Marshal.UnsafeAddrOfPinnedArrayElement(result, 0), result.Length);
         Lua.lua_pushinteger(data.L, data.id);
         Lua.lua_pcall(data.L, 2, 0, 0);
 

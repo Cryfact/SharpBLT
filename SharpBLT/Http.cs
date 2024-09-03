@@ -9,7 +9,7 @@ public sealed class Http
     private static readonly object _httpClientLock = new();
     private static readonly PerHostHttpClientFactory _httpClientFactory = new();
 
-    public async static Task DoHttpReqAsync<T>(string url, T data, Action<T, string> onDone, Action<T, long, long>? onProgress = null, CancellationToken cancellationToken = default)
+    public async static Task DoHttpReqAsync<T>(string url, T data, Action<T, byte[]> onDone, Action<T, long, long>? onProgress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -45,8 +45,7 @@ public sealed class Http
             // Reset pos for read
             target.Position = 0;
 
-            // FIXME: binary (zip) breaks this!!
-            var result = System.Text.Encoding.Default.GetString(target.ToArray(), 0, (int)target.Length);
+            byte[] result = target.ToArray();
 
             lock (_httpClientLock)
                 onDone.Invoke(data, result);
