@@ -1,7 +1,10 @@
 ﻿namespace SharpBLT;
+
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using System.Xml;
 
 public class LuaMod
 {
@@ -10,7 +13,6 @@ public class LuaMod
     public static void Initialize(IntPtr L)
     {
         Lua.lua_pushcclosure(L, luaF_print, 0);
-
         Lua.lua_setfield(L, Lua.LUA_GLOBALSINDEX, "log");
 
         Lua.lua_pushcclosure(L, luaF_pcall, 0);
@@ -29,7 +31,6 @@ public class LuaMod
             new("CreateConsole", luaF_createconsole),
             new("DestroyConsole", luaF_destroyconsole),
         ];
-
         Lua.luaI_openlib(L, "console", consoleLib, 0);
 
         LuaReg[] fileLib = [
@@ -38,20 +39,26 @@ public class LuaMod
             new("RemoveDirectory", luaF_removeDirectory),
             new("DirectoryExists", luaF_directoryExists),
             new("DirectoryHash", luaF_directoryhash),
+            new("FileExists", luaF_fileExists),
             new("FileHash", luaF_filehash),
             new("MoveDirectory", luaF_moveDirectory),
+            new("CreateDirectory", luaF_createDirectory),
         ];
-
         Lua.luaI_openlib(L, "file", fileLib, 0);
 
-        // Keeping everything in lowercase since IspcallForced / IsPCallForced and Forcepcalls / ForcePCalls look rather weird anyway
         LuaReg[] bltLib = [
             new("ispcallforced", luaF_ispcallforced),
             new("forcepcalls", luaF_forcepcalls),
+            new("blt_info", luaF_blt_info),
             new("GetDllVersion", luaF_GetDllVersion),
             new("EnableApplicationLog", luaF_EnableApplicationLog),
+            new("pcall", luaF_pcall_proper), // Lua pcall shouldn't print errors, however BLT's global pcall does (leave it for compat)
+		    new("xpcall", luaF_xpcall),
+            new("parsexml", luaF_parsexml),
+            new("structid", luaF_structid),
+            //new("ignoretweak", luaF_ignoretweak), // TODO?
+            //new("load_native", luaF_load_native), // TODO? ooof!
         ];
-
         Lua.luaI_openlib(L, "blt", bltLib, 0);
 
         Logger.Instance().Log(LogType.Log, $"Loading SharpBLT Lua base mod onto {L}");
@@ -257,6 +264,33 @@ public class LuaMod
         return Lua.lua_gettop(L);
     }
 
+    private static int luaF_pcall_proper(IntPtr L)
+    {
+        Lua.luaL_checkany(L, 1);
+        int status = Lua.lua_pcall(L, Lua.lua_gettop(L) - 1, Lua.LUA_MULTRET, 0);
+        Lua.lua_pushboolean(L, status == 0);
+        Lua.lua_insert(L, 1);
+        return Lua.lua_gettop(L); // return status + all results
+    }
+
+    private static int luaF_xpcall(IntPtr L)
+    {
+        // Args: func, err, ...
+
+        // Move err from the 2nd index to the 1st index, so we have a continuous range for the function call
+        Lua.lua_pushvalue(L, 2); // Copy err to the top
+        Lua.lua_remove(L, 2); // Remove err
+        Lua.lua_insert(L, 1); // Put error function under function to be called
+
+        int status = Lua.lua_pcall(L, Lua.lua_gettop(L) - 2, Lua.LUA_MULTRET, 1);
+
+        // Replace the error function (1st position) with the result
+        Lua.lua_pushboolean(L, (status == 0));
+        Lua.lua_replace(L, 1);
+
+        return Lua.lua_gettop(L);  // return entire stack - status, possible err + all results
+    }
+
     private static int luaF_dofile(IntPtr L)
     {
         //int n = Lua.lua_gettop(L);
@@ -416,9 +450,9 @@ public class LuaMod
 
             Lua.lua_pushboolean(L, true);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Logger.Instance().Log(LogType.Warn, e.Message);
+            Logger.Instance().Log(LogType.Warn, ex.Message);
 
             Lua.lua_pushboolean(L, false);
         }
@@ -446,6 +480,17 @@ public class LuaMod
         string hash = Hasher.GetDirectoryHash(path);
 
         Lua.lua_pushlstring(L, hash, hash.Length);
+
+        return 1;
+    }
+
+    private static int luaF_fileExists(IntPtr L)
+    {
+        //int n = Lua.lua_gettop(L);
+
+        string path = Lua.lua_tolstring(L, 1, out _);
+
+        Lua.lua_pushboolean(L, File.Exists(path));
 
         return 1;
     }
@@ -483,6 +528,19 @@ public class LuaMod
         return 1;
     }
 
+    private static int luaF_createDirectory(IntPtr L)
+    {
+        //int n = Lua.lua_gettop(L);
+
+        string path = Lua.lua_tolstring(L, 1, out _);
+
+        DirectoryInfo dirInfo = Directory.CreateDirectory(path);
+
+        Lua.lua_pushboolean(L, dirInfo != null && dirInfo.Exists);
+
+        return 1;
+    }
+
     private static int luaH_getcontents(IntPtr L, bool files)
     {
         //int n = Lua.lua_gettop(L);
@@ -493,9 +551,11 @@ public class LuaMod
         try
         {
             if (!files)
-                directories = Directory.GetFiles(dir, "*", SearchOption.TopDirectoryOnly).Select((x) => Path.GetFileName(x)).ToArray();
+                directories = Directory.GetFiles(dir, "*", SearchOption.TopDirectoryOnly);
             else
-                directories = Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly); // FIXME? untested yet
+                directories = Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly);
+
+            directories = directories.Select((x) => x.Replace(dir, string.Empty)).ToArray();
         }
         catch (Exception)
         {
@@ -519,4 +579,187 @@ public class LuaMod
 
         return 1;
     }
+
+    private static int luaF_blt_info(IntPtr L)
+    {
+        Lua.lua_newtable(L);
+
+        Lua.lua_pushstring(L, "mswindows");
+        Lua.lua_setfield(L, -2, "platform");
+
+        Lua.lua_pushstring(L, "x86-64");
+        Lua.lua_setfield(L, -2, "arch");
+
+        Lua.lua_pushstring(L, "raid");
+        Lua.lua_setfield(L, -2, "game");
+
+        return 1;
+    }
+
+    private static int luaF_parsexml(IntPtr L)
+    {
+        //int n = Lua.lua_gettop(L);
+
+        string xml = Lua.lua_tolstring(L, 1, out _);
+
+        try
+        {
+            XmlDocument xmlDoc = new();
+            xmlDoc.LoadXml(xml);
+
+            XmlNode? baseNode = xmlDoc.DocumentElement;
+
+            if (baseNode != null && baseNode.Name.StartsWith("?xml"))
+            {
+                baseNode = baseNode.FirstChild;
+            }
+
+            if (baseNode != null)
+            {
+                BuildXmlTree(L, baseNode);
+            }
+            else
+            {
+                Logger.Instance().Log(LogType.Error, $"Parsed XML does not contain any nodes{Environment.NewLine}{xml}");
+                Lua.lua_pushnil(L);
+            }
+        }
+        catch (XmlException ex)
+        {
+            Logger.Instance().Log(LogType.Error, $"Could not parse XML: Error and original file below{Environment.NewLine}{ex.Message}{Environment.NewLine}{xml}");
+            Lua.lua_pushnil(L);
+        }
+
+        return 1;
+    }
+    private static void BuildXmlTree(IntPtr L, XmlNode node)
+    {
+        // Create the main table
+        Lua.lua_newtable(L);
+
+        // Set the element name
+        Lua.lua_pushstring(L, node.Name);
+        Lua.lua_setfield(L, -2, "name");
+
+        // Create the parameters table
+        Lua.lua_newtable(L);
+        if (node.Attributes != null)
+        {
+            foreach (XmlAttribute attr in node.Attributes)
+            {
+                Lua.lua_pushstring(L, attr.Value);
+                Lua.lua_setfield(L, -2, attr.Name);
+            }
+        }
+        Lua.lua_setfield(L, -2, "params");
+
+        // Add all the child nodes
+        XmlNode? child = node.FirstChild;
+        int i = 1;
+        while (child != null)
+        {
+            if (child.NodeType == XmlNodeType.Element && !child.Name.StartsWith("!--"))
+            {
+                BuildXmlTree(L, child);
+                Lua.lua_rawseti(L, -2, i++);
+            }
+            child = child.NextSibling;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TValue
+    {
+        public uint gcptr32;  // Pseudo 32-bit pointer
+        public uint it;       // Internal object tag (must overlap with MSW of number)
+    }
+
+    private static unsafe TValue** GetTValuePtr(IntPtr L)
+    {
+        // Adjust the pointer according to the C++ offset logic
+        byte* ptr = (byte*)L.ToPointer();
+        ptr += 16; // Offset where Lua stack starts
+        return (TValue**)ptr;
+    }
+
+    // Basically the same thing as lua_topointer
+    private static unsafe int luaF_structid(IntPtr L)
+    {
+        int n = Lua.lua_gettop(L);
+
+        if (n != 1)
+        {
+            Lua.luaL_error(L, "Signature: structid(struct)");
+        }
+
+        IntPtr valuePtr = IntPtr.Zero;
+
+        TValue** value = GetTValuePtr(L);
+
+        if (Lua.lua_type(L, 1) == Lua.LUA_TUSERDATA || Lua.lua_islightuserdata(L, 1))
+        {
+            valuePtr = Lua.lua_touserdata(L, 1);
+        }
+        else if ((*value)->it > (~13u))
+        {
+            valuePtr = (IntPtr)(ulong)(*value)->gcptr32;
+        }
+        else
+        {
+            Lua.luaL_error(L, "Illegal argument - should be tvgcv (table) or userdata");
+        }
+
+        // Convert the pointer to a hexadecimal string
+        string buffer = string.Format("{0:X8}", valuePtr.ToInt64());
+
+        // Push the string onto the Lua stack
+        Lua.lua_pushstring(L, buffer);
+
+        return 1;
+    }
+
+    //private static int luaF_ignoretweak(lua_State* L)
+    //{
+    //    blt::idfile file;
+
+    //    file.name = luaX_toidstring(L, 1);
+    //    file.ext = luaX_toidstring(L, 2);
+
+    //    tweaker::ignore_file(file);
+
+    //    return 0;
+    //}
+
+    //private static int luaF_load_native(IntPtr L)
+    //{
+    //    string file = Lua.lua_tostring(L, 1);
+
+    //    try
+    //    {
+    //        blt::plugins::Plugin* plugin = NULL;
+    //        blt::plugins::PluginLoadResult result = blt::plugins::LoadPlugin(file, &plugin);
+
+    //        // TODO some kind of UUID system to prevent issues with multiple mods having the same DLL
+
+    //        int count = plugin->PushLuaValue(L);
+
+    //        if (result == blt::plugins::plr_AlreadyLoaded)
+    //        {
+    //            Lua.lua_pushstring(L, "Already loaded");
+    //        }
+    //        else
+    //        {
+    //            Lua.lua_pushboolean(L, true);
+    //        }
+
+    //        Lua.lua_insert(L, -1 - count);
+    //        return count + 1;
+
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        Lua.luaL_error(L, e.Message);
+    //        return 0; // Fix the no-return compiler warning, but this will never be called
+    //    }
+    //}
 }

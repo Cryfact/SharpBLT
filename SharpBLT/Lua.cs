@@ -53,6 +53,10 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate long lua_objlen_fn(IntPtr luaState, int arg0);
 
+    [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 00")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate IntPtr lua_touserdata_fn(IntPtr luaState, int arg0);
+
     [FunctionPattern("48 89 5C 24 20 55 56 57 48 81 EC 50 02 00 00 48")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int luaL_loadfilex_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1);
@@ -76,6 +80,10 @@ public sealed class Lua
     [FunctionPattern("4C 8B C9 85 D2 7E ?? 8D 42 FF 48 63 D0 48 8B 41")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_insert_fn(IntPtr luaState, int arg0);
+
+    [FunctionPattern("40 53 48 83 EC 20 44 8B C2")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_replace_fn(IntPtr luaState, int arg0);
 
     [FunctionPattern("4C 8B C1 85 D2 7E ?? 8D 42 FF 48 63 D0 48 8B 41 20 48 8B 49 28 48 8D 04 D0 48 3B C1")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -117,6 +125,14 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_checkstack_fn(IntPtr luaState, int arg0);
 
+    [FunctionPattern("48 83 EC 28 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 53 28 48 8B 00")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_pushvalue_fn(IntPtr luaState, int arg0);
+
+    [FunctionPattern("48 8B 41 28 48 C7 00 FF FF FF FF 48 83 41 28 08 48 8B 41 28")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_pushnil_fn(IntPtr luaState);
+
     [FunctionPattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 20 48 8B 41 28")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void luaI_openlib_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1, int arg2);
@@ -141,6 +157,14 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void luaL_unref_fn(IntPtr luaState, int arg0, int arg1);
 
+    [FunctionPattern("48 89 54 24 10 4C 89 44 24 18 4C 89 4C 24 20 53 48 83 EC 20 4C 8D 44 24 40")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int luaL_error_fn(IntPtr luaState, IntPtr arg0, IntPtr args);
+
+    [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 48 85 C0")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int lua_error_fn(IntPtr luaState);
+
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 41 0F B6 F8 0F B6 F2 48 8B D9 45 85 C9")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr luaL_newstate_fn(IntPtr arg0, [MarshalAs(UnmanagedType.I1)] bool arg2,
@@ -155,12 +179,14 @@ public sealed class Lua
     public static readonly lua_tonumber_fn lua_tonumber;
     public static readonly lua_tolstring_fn lua_tolstring_ptr;
     public static readonly lua_objlen_fn lua_objlen;
+    public static readonly lua_touserdata_fn lua_touserdata;
     private static readonly luaL_loadfilex_fn luaL_loadfilex_ptr;
     public static readonly luaL_loadstring_fn luaL_loadstring;
     private static readonly lua_getfield_fn lua_getfield_ptr;
     private static readonly lua_setfield_fn lua_setfield_ptr;
     public static readonly lua_createtable_fn lua_createtable;
     public static readonly lua_insert_fn lua_insert;
+    public static readonly lua_replace_fn lua_replace;
     public static readonly lua_remove_fn lua_remove;
     public static readonly lua_newstate_fn lua_newstate;
     public static readonly lua_settable_fn lua_settable;
@@ -170,13 +196,16 @@ public sealed class Lua
     private static readonly lua_pushlstring_fn lua_pushlstring_ptr;
     private static readonly lua_pushstring_fn lua_pushstring_ptr;
     public static readonly lua_checkstack_fn lua_checkstack;
+    public static readonly lua_pushvalue_fn lua_pushvalue;
+    public static readonly lua_pushnil_fn lua_pushnil;
     private static readonly luaI_openlib_fn luaI_openlib_ptr;
     public static readonly luaL_ref_fn luaL_ref;
     public static readonly lua_rawgeti_fn lua_rawgeti;
     public static readonly lua_rawseti_fn lua_rawseti;
     public static readonly lua_type_fn lua_type;
     public static readonly luaL_unref_fn luaL_unref;
-
+    private static readonly luaL_error_fn luaL_error_ptr;
+    public static readonly lua_error_fn lua_error;
 
     private static readonly Hook<lua_call_fn> ms_lua_call_hook;
     private static readonly Hook<luaL_newstate_fn> ms_luaL_newstate_hook;
@@ -208,12 +237,14 @@ public sealed class Lua
         lua_tonumber = FunctionUtils.ResolveFunction<lua_tonumber_fn>(nameof(lua_tonumber));
         lua_tolstring_ptr = FunctionUtils.ResolveFunction<lua_tolstring_fn>(nameof(lua_tolstring));
         lua_objlen = FunctionUtils.ResolveFunction<lua_objlen_fn>(nameof(lua_objlen));
+        lua_touserdata = FunctionUtils.ResolveFunction<lua_touserdata_fn>(nameof(lua_touserdata));
         luaL_loadfilex_ptr = FunctionUtils.ResolveFunction<luaL_loadfilex_fn>(nameof(luaL_loadfilex));
         luaL_loadstring = FunctionUtils.ResolveFunction<luaL_loadstring_fn>(nameof(luaL_loadstring));
         lua_getfield_ptr = FunctionUtils.ResolveFunction<lua_getfield_fn>(nameof(lua_getfield));
         lua_setfield_ptr = FunctionUtils.ResolveFunction<lua_setfield_fn>(nameof(lua_setfield));
         lua_createtable = FunctionUtils.ResolveFunction<lua_createtable_fn>(nameof(lua_createtable));
         lua_insert = FunctionUtils.ResolveFunction<lua_insert_fn>(nameof(lua_insert));
+        lua_replace = FunctionUtils.ResolveFunction<lua_replace_fn>(nameof(lua_replace));
         lua_remove = FunctionUtils.ResolveFunction<lua_remove_fn>(nameof(lua_remove));
         lua_settable = FunctionUtils.ResolveFunction<lua_settable_fn>(nameof(lua_settable));
         lua_pushinteger = FunctionUtils.ResolveFunction<lua_pushinteger_fn>(nameof(lua_pushinteger));
@@ -221,6 +252,8 @@ public sealed class Lua
         lua_pushcclosure_ptr = FunctionUtils.ResolveFunction<lua_pushcclosure_fn>(nameof(lua_pushcclosure));
         lua_pushlstring_ptr = FunctionUtils.ResolveFunction<lua_pushlstring_fn>(nameof(lua_pushlstring));
         lua_pushstring_ptr = FunctionUtils.ResolveFunction<lua_pushstring_fn>(nameof(lua_pushstring));
+        lua_pushvalue = FunctionUtils.ResolveFunction<lua_pushvalue_fn>(nameof(lua_pushvalue));
+        lua_pushnil = FunctionUtils.ResolveFunction<lua_pushnil_fn>(nameof(lua_pushnil));
         lua_checkstack = FunctionUtils.ResolveFunction<lua_checkstack_fn>(nameof(lua_checkstack));
         luaI_openlib_ptr = FunctionUtils.ResolveFunction<luaI_openlib_fn>(nameof(luaI_openlib));
         luaL_ref = FunctionUtils.ResolveFunction<luaL_ref_fn>(nameof(luaL_ref));
@@ -228,6 +261,8 @@ public sealed class Lua
         lua_rawseti = FunctionUtils.ResolveFunction<lua_rawseti_fn>(nameof(lua_rawseti));
         lua_type = FunctionUtils.ResolveFunction<lua_type_fn>(nameof(lua_type));
         luaL_unref = FunctionUtils.ResolveFunction<luaL_unref_fn>(nameof(luaL_unref));
+        luaL_error_ptr = FunctionUtils.ResolveFunction<luaL_error_fn>(nameof(luaL_error));
+        lua_error = FunctionUtils.ResolveFunction<lua_error_fn>(nameof(lua_error));
 
         lua_call = ms_lua_call_hook.Apply() ?? throw new Exception("Failed to apply lua_call hook");
         luaL_newstate = ms_luaL_newstate_hook.Apply() ?? throw new Exception("Failed to apply luaL_newstate hook");
@@ -285,6 +320,18 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void lua_newtable(IntPtr L)
+    {
+        lua_createtable(L, 0, 0);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void luaL_getmetatable(IntPtr L, int arg0)
+    {
+        lua_getfield_ptr(L, LUA_GLOBALSINDEX, arg0);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_getglobal(IntPtr L, string str)
     {
         var ptr = Marshal.StringToHGlobalAnsi(str);
@@ -297,6 +344,14 @@ public sealed class Lua
     {
         var ptr = Marshal.StringToHGlobalAnsi(str);
         lua_getfield_ptr(L, arg0, ptr);
+        Marshal.FreeHGlobal(ptr);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void lua_setglobal(IntPtr L, string str)
+    {
+        var ptr = Marshal.StringToHGlobalAnsi(str);
+        lua_setfield_ptr(L, LUA_GLOBALSINDEX, ptr);
         Marshal.FreeHGlobal(ptr);
     }
 
@@ -320,9 +375,57 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe static string lua_tostring(IntPtr L, int arg0)
+    {
+        return lua_tolstring(L, arg0, out _);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool lua_isfunction(IntPtr L, int arg0)
     {
         return lua_type(L, arg0) == LUA_TFUNCTION;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_istable(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) == LUA_TTABLE;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_islightuserdata(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) == LUA_TLIGHTUSERDATA;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_isnil(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) == LUA_TNIL;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_isboolean(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) == LUA_TBOOLEAN;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_isthread(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) == LUA_TTHREAD;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_isnone(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) == LUA_TNONE;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool lua_isnoneornil(IntPtr L, int arg0)
+    {
+        return lua_type(L, arg0) <= 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -375,6 +478,22 @@ public sealed class Lua
 
             Marshal.FreeHGlobal(luaL_Regs[i].Name);
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void luaL_openlib(IntPtr L, string name, LuaReg[] reg, int arg2)
+    {
+        luaI_openlib(L, name, reg, arg2);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int luaL_error(IntPtr L, string str, params VariableArgument[] args)
+    {
+        var ptr = Marshal.StringToHGlobalAnsi(str);
+        using var arguments = new CombinedVariables(args);
+        int result = luaL_error_ptr(L, ptr, arguments.GetPtr());
+        Marshal.FreeHGlobal(ptr);
+        return result;
     }
 
     public static int luaL_loadfilex(IntPtr luaState, string filename)
@@ -492,4 +611,19 @@ public sealed class Lua
         ms_activeStates.Remove(L);
         Logger.Instance().Log(LogType.Log, $"Lua-state closed: {L}");
     }
+
+    #region "laux"
+
+    private static int luaL_argerror(IntPtr L, int narg, string extramsg)
+    {
+        return luaL_error(L, "bad argument #%d (%s)", narg, extramsg);
+    }
+
+    public static void luaL_checkany(IntPtr L, int narg)
+    {
+        if (lua_type(L, narg) == LUA_TNONE)
+            luaL_argerror(L, narg, "value expected");
+    }
+
+    #endregion
 }

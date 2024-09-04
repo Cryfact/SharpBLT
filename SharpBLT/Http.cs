@@ -46,9 +46,9 @@ public sealed class Http
 
             HttpEventQueue.Instance().QueueDoneEvent(onDone, data, result);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Logger.Instance().Log(LogType.Warn, e.Message + Environment.NewLine + e.StackTrace);
+            Logger.Instance().Log(LogType.Warn, ex.Message + Environment.NewLine + ex.StackTrace);
         }
     }
 
