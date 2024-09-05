@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Xml;
+using System.Xml.Linq;
 
 public class LuaMod
 {
@@ -605,66 +605,56 @@ public class LuaMod
 
         try
         {
-            XmlDocument xmlDoc = new();
-            xmlDoc.LoadXml(xml);
+            // Preprocess the XML string to handle `:`-prefixed attributes
+            string processedXml = XmlHelper.PreprocessXml(xml);
 
-            XmlNode? baseNode = xmlDoc.DocumentElement;
+            // Load the processed XML using XDocument
+            XDocument xDoc = XDocument.Parse(processedXml);
 
-            if (baseNode != null && baseNode.Name.StartsWith("?xml"))
+            XElement? root = xDoc.Root;
+            if (root != null)
             {
-                baseNode = baseNode.FirstChild;
-            }
-
-            if (baseNode != null)
-            {
-                BuildXmlTree(L, baseNode);
+                XmlHelper.ApplyMergedAttributes(root);
+                BuildXmlTree(L, root);
             }
             else
             {
-                Logger.Instance().Log(LogType.Error, $"Parsed XML does not contain any nodes{Environment.NewLine}{xml}");
+                Logger.Instance().Log(LogType.Error, $"Parsed XML does not contain any nodes"/*{Environment.NewLine}{xml}*/);
                 Lua.lua_pushnil(L);
             }
         }
-        catch (XmlException ex)
+        catch (Exception ex)
         {
-            Logger.Instance().Log(LogType.Error, $"Could not parse XML: Error and original file below{Environment.NewLine}{ex.Message}{Environment.NewLine}{xml}");
+            Logger.Instance().Log(LogType.Error, $"Could not parse XML: {ex.Message}"/*{Environment.NewLine}{xml}*/);
             Lua.lua_pushnil(L);
         }
 
         return 1;
     }
-    private static void BuildXmlTree(IntPtr L, XmlNode node)
+
+    private static void BuildXmlTree(IntPtr L, XElement element)
     {
-        // Create the main table
         Lua.lua_newtable(L);
 
         // Set the element name
-        Lua.lua_pushstring(L, node.Name);
+        Lua.lua_pushstring(L, element.Name.LocalName);
         Lua.lua_setfield(L, -2, "name");
 
         // Create the parameters table
         Lua.lua_newtable(L);
-        if (node.Attributes != null)
+        foreach (XAttribute attr in element.Attributes())
         {
-            foreach (XmlAttribute attr in node.Attributes)
-            {
-                Lua.lua_pushstring(L, attr.Value);
-                Lua.lua_setfield(L, -2, attr.Name);
-            }
+            Lua.lua_pushstring(L, attr.Value);
+            Lua.lua_setfield(L, -2, attr.Name.LocalName);
         }
         Lua.lua_setfield(L, -2, "params");
 
         // Add all the child nodes
-        XmlNode? child = node.FirstChild;
         int i = 1;
-        while (child != null)
+        foreach (XElement child in element.Elements())
         {
-            if (child.NodeType == XmlNodeType.Element && !child.Name.StartsWith("!--"))
-            {
-                BuildXmlTree(L, child);
-                Lua.lua_rawseti(L, -2, i++);
-            }
-            child = child.NextSibling;
+            BuildXmlTree(L, child);
+            Lua.lua_rawseti(L, -2, i++);
         }
     }
 
