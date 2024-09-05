@@ -18,9 +18,9 @@ class CombinedVariables : IDisposable
         _disposables = [];
 
         _ptr = Marshal.AllocHGlobal(args.Sum(arg => arg.GetSize()));
-        var curPtr = _ptr;
+        IntPtr curPtr = _ptr;
 
-        foreach (var arg in args)
+        foreach (VariableArgument arg in args)
         {
             _disposables.Add(arg.Write(curPtr));
             curPtr += arg.GetSize();
@@ -41,7 +41,7 @@ class CombinedVariables : IDisposable
         {
             _disposed = true;
 
-            foreach (var disposable in _disposables)
+            foreach (IDisposable disposable in _disposables)
                 disposable.Dispose();
 
             Marshal.FreeHGlobal(_ptr);
@@ -138,7 +138,7 @@ sealed class VariableStringArgument(string value) : VariableArgument
 
     public override IDisposable Write(IntPtr buffer)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(_value);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(_value);
 
         Marshal.Copy(new[] { ptr }, 0, buffer, 1);
 

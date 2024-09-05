@@ -10,7 +10,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
     private IntPtr m_trampolineAddress;
     private readonly TDelegate m_target;
     private readonly TDelegate m_trampoline;
-    private readonly TDelegate m_original;
+    //private readonly TDelegate m_original;
 
     private readonly byte[] m_origBytes;
     private readonly byte[] m_newBytes;
@@ -20,15 +20,15 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
     public TDelegate OldFunction => IsEnabled ? m_trampoline : m_target;
 
     public Hook(IntPtr address, TDelegate target)
-    { 
+    {
         m_address = address;
-        m_original = Marshal.GetDelegateForFunctionPointer<TDelegate>(m_address);
+        //m_original = Marshal.GetDelegateForFunctionPointer<TDelegate>(m_address);
         m_target = target;
         m_targetAddress = Marshal.GetFunctionPointerForDelegate(m_target);
 
         Logger.Instance().Log(LogType.Log, $"Create Hook on 0x{m_address:X8} to 0x{m_targetAddress:X8}");
 
-        List<ud_type> registerInUse = [ ud_type.UD_R_RCX, ud_type.UD_R_RDX, ud_type.UD_R_R8, ud_type.UD_R_R9 ]; // all used registers in fastcall on x64 (RCX used on thiscall)
+        List<ud_type> registerInUse = [ud_type.UD_R_RCX, ud_type.UD_R_RDX, ud_type.UD_R_R8, ud_type.UD_R_R9]; // all used registers in fastcall on x64 (RCX used on thiscall)
 
         m_newBytes = GetJumpBytes(m_address, m_targetAddress);
 
@@ -103,7 +103,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
 
         if (m_trampolineAddress != IntPtr.Zero)
         {
-            HookMemoryFree(m_trampolineAddress, 0);
+            HookMemoryFree(m_trampolineAddress);
             m_trampolineAddress = IntPtr.Zero;
         }
     }
@@ -111,9 +111,9 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
     private byte Analyze(int minSize, int decodeSize)
     {
         byte length = 0;
-        var disasm = new SharpDisasm.Disassembler(m_address, decodeSize, SharpDisasm.ArchitectureMode.x86_64);
+        SharpDisasm.Disassembler disasm = new(m_address, decodeSize, SharpDisasm.ArchitectureMode.x86_64);
 
-        foreach (var insn in disasm.Disassemble())
+        foreach (SharpDisasm.Instruction insn in disasm.Disassemble())
         {
             length += (byte)insn.Length;
 
@@ -139,19 +139,19 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
 
     private int ApplyJumps(List<ud_type> registerInUse, int size)
     {
-        var pBuffer = m_trampolineAddress;
+        IntPtr pBuffer = m_trampolineAddress;
 
         Marshal.Copy(m_origBytes, 0, pBuffer, m_origBytes.Length);
         pBuffer += m_origBytes.Length;
 
-        var src = pBuffer.ToInt64();
-        var dst = m_address.ToInt64();
+        long src = pBuffer.ToInt64();
+        long dst = m_address.ToInt64();
 
         bool isNearTargetFunc = Math.Abs(dst - src + 5) <= 0x7FFFFFFF;
         if (!isNearTargetFunc)
         {
             // perform 64 bit jump
-            var unusedRegister = GetUnusedRegister(registerInUse);
+            ud_type? unusedRegister = GetUnusedRegister(registerInUse);
 
             if (unusedRegister != null)
             {
@@ -174,7 +174,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
 
         if (reg == ud_type.UD_NONE)
         {
-            var addressDif = (uint)(pTarget.ToInt64() - (pSource.ToInt64() + 5));
+            uint addressDif = (uint)(pTarget.ToInt64() - (pSource.ToInt64() + 5));
 
             Marshal.WriteByte(pDst++, 0xE9);
             Marshal.WriteInt32(pDst, (int)addressDif);
@@ -319,14 +319,14 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
         return Kernel32.VirtualAlloc(address, (uint)size, Kernel32.AllocationType.Commit | Kernel32.AllocationType.Reserve, Kernel32.MemoryProtection.ReadWrite);
     }
 
-    private static void HookMemoryFree(IntPtr address, int size)
+    private static void HookMemoryFree(IntPtr address)
     {
         Kernel32.VirtualFree(address, 0, Kernel32.FreeType.Release);
     }
 
     private static IntPtr AllocatePageNearMemory(IntPtr address, int size)
     {
-        var sysInfo = new Kernel32.SYSTEM_INFO();
+        Kernel32.SYSTEM_INFO sysInfo = new();
         Kernel32.GetSystemInfo(ref sysInfo);
 
         ulong pageSize = sysInfo.dwPageSize;
@@ -370,7 +370,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
 
     private static byte[] GetJumpBytes(IntPtr address, IntPtr target)
     {
-        List<ud_type> registerInUse = [ ud_type.UD_R_RCX, ud_type.UD_R_RDX, ud_type.UD_R_R8, ud_type.UD_R_R9 ]; // all used registers in fastcall on x64 (RCX used on thiscall)
+        List<ud_type> registerInUse = [ud_type.UD_R_RCX, ud_type.UD_R_RDX, ud_type.UD_R_R8, ud_type.UD_R_R9]; // all used registers in fastcall on x64 (RCX used on thiscall)
         long src = address.ToInt64();
         long dst = target.ToInt64();
 
@@ -379,7 +379,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
         if (!isNearTargetFunc)
         {
             // perform 64 bit jump
-            var unusedRegister = GetUnusedRegister(registerInUse);
+            ud_type? unusedRegister = GetUnusedRegister(registerInUse);
 
             if (unusedRegister != null)
             {
@@ -417,7 +417,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
             ud_type.UD_R_R15,
         ];
 
-        foreach (var it in registers)
+        foreach (ud_type it in registers)
         {
             if (!allRegisters.Contains(it))
             {
@@ -541,7 +541,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
         {
             result = new byte[5];
 
-            var addressDif = (uint)(pTarget.ToInt64() - (pSource.ToInt64() + 5));
+            uint addressDif = (uint)(pTarget.ToInt64() - (pSource.ToInt64() + 5));
 
             result[0] = 0xE9;
             result[1] = (byte)(addressDif);
@@ -554,22 +554,18 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
             byte jumpReg = 0xE0;
             bool hasPrefix = false;
 
-            switch (register)
+            result = register switch
             {
-                case ud_type.UD_R_R8:
-                case ud_type.UD_R_R9:
-                case ud_type.UD_R_R10:
-                case ud_type.UD_R_R11:
-                case ud_type.UD_R_R12:
-                case ud_type.UD_R_R13:
-                case ud_type.UD_R_R14:
-                case ud_type.UD_R_R15:
-                    result = new byte[13];
-                    break;
-                default:
-                    result = new byte[12];
-                    break;
-            }
+                ud_type.UD_R_R8 or
+                ud_type.UD_R_R9 or
+                ud_type.UD_R_R10 or
+                ud_type.UD_R_R11 or
+                ud_type.UD_R_R12 or
+                ud_type.UD_R_R13 or
+                ud_type.UD_R_R14 or
+                ud_type.UD_R_R15 => new byte[13],
+                _ => new byte[12],
+            };
 
             switch (register)
             {
@@ -679,7 +675,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
                     break;
             }
 
-            var targetAddr = pTarget.ToInt64();
+            long targetAddr = pTarget.ToInt64();
 
             result[sizeof(byte) * 2] = (byte)(targetAddr);
             result[sizeof(byte) * 2 + 1] = (byte)(targetAddr >> 8);
@@ -704,7 +700,7 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
 
     private static void HookMemoryExecuteOnly(IntPtr pAddr, int size)
     {
-	        if (!Kernel32.VirtualProtect(pAddr, new UIntPtr((uint)size), Kernel32.PAGE_EXECUTE, out uint _))
+        if (!Kernel32.VirtualProtect(pAddr, new UIntPtr((uint)size), Kernel32.PAGE_EXECUTE, out uint _))
             throw new Exception("Failed to protect memory");
     }
 

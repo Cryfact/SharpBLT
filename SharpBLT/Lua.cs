@@ -334,7 +334,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_getglobal(IntPtr L, string str)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(str);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
         lua_getfield_ptr(L, LUA_GLOBALSINDEX, ptr);
         Marshal.FreeHGlobal(ptr);
     }
@@ -342,7 +342,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_getfield(IntPtr L, int arg0, string str)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(str);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
         lua_getfield_ptr(L, arg0, ptr);
         Marshal.FreeHGlobal(ptr);
     }
@@ -350,7 +350,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_setglobal(IntPtr L, string str)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(str);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
         lua_setfield_ptr(L, LUA_GLOBALSINDEX, ptr);
         Marshal.FreeHGlobal(ptr);
     }
@@ -358,7 +358,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_setfield(IntPtr L, int arg0, string str)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(str);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
         lua_setfield_ptr(L, arg0, ptr);
         Marshal.FreeHGlobal(ptr);
     }
@@ -366,8 +366,8 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static string lua_tolstring(IntPtr L, int arg0, out int size)
     {
-        var ptr = lua_tolstring_ptr(L, arg0, out var len);
-        var str = new string((sbyte*)ptr);
+        IntPtr ptr = lua_tolstring_ptr(L, arg0, out IntPtr len);
+        string str = new((sbyte*)ptr);
 
         size = len.ToInt32();
 
@@ -431,7 +431,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_pushstring(IntPtr L, string arg0)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(arg0);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(arg0);
         lua_pushstring_ptr(L, ptr);
         Marshal.FreeHGlobal(ptr);
     }
@@ -439,7 +439,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_pushlstring(IntPtr L, string arg0, int length)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(arg0);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(arg0);
         lua_pushlstring_ptr(L, ptr, length);
         Marshal.FreeHGlobal(ptr);
     }
@@ -459,7 +459,7 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void luaI_openlib(IntPtr L, string name, LuaReg[] reg, int arg2)
     {
-        var ptrName = Marshal.StringToHGlobalAnsi(name);
+        IntPtr ptrName = Marshal.StringToHGlobalAnsi(name);
 
         luaL_Reg[] luaL_Regs = new luaL_Reg[reg.Length + 1];
 
@@ -489,8 +489,8 @@ public sealed class Lua
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int luaL_error(IntPtr L, string str, params VariableArgument[] args)
     {
-        var ptr = Marshal.StringToHGlobalAnsi(str);
-        using var arguments = new CombinedVariables(args);
+        IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
+        using CombinedVariables arguments = new(args);
         int result = luaL_error_ptr(L, ptr, arguments.GetPtr());
         Marshal.FreeHGlobal(ptr);
         return result;
@@ -498,7 +498,7 @@ public sealed class Lua
 
     public static int luaL_loadfilex(IntPtr luaState, string filename)
     {
-        var ptrName = Marshal.StringToHGlobalAnsi(filename);
+        IntPtr ptrName = Marshal.StringToHGlobalAnsi(filename);
         int err = luaL_loadfilex_ptr(luaState, ptrName, 0);
         Marshal.FreeHGlobal(ptrName);
         return err;
@@ -552,7 +552,7 @@ public sealed class Lua
         int result = lua_pcall(L, args, returns, errorhandler);
         if (result != 0)
         {
-            var message = lua_tolstring(L, -1, out var len);
+            string message = lua_tostring(L, -1);
 
             if (message != null)
             {
@@ -575,7 +575,7 @@ public sealed class Lua
 
     private unsafe static IntPtr luaL_newstate_new(IntPtr _this, bool unk0, bool unk1, int unk2)
     {
-        var ret = luaL_newstate(_this, unk0, unk1, unk2);
+        IntPtr ret = luaL_newstate(_this, unk0, unk1, unk2);
 
         IntPtr L = new(*(void**)_this.ToPointer());
 
@@ -591,7 +591,7 @@ public sealed class Lua
 
     internal static bool check_active_state(IntPtr L)
     {
-        foreach (var it in ms_activeStates)
+        foreach (IntPtr it in ms_activeStates)
         {
             if (it == L)
                 return true;

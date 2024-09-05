@@ -47,11 +47,11 @@ public class Logger : Singleton<Logger>
         if (logType < CurrentLogLevel)
             return;
 
-        var time = DateTime.Now;
-        var strlogType = GetLogTypeString(logType);
+        DateTime time = DateTime.Now;
+        string strlogType = GetLogTypeString(logType);
 
-        var strippedFile = file!.Replace(GetThisPath(), string.Empty);
-        var msg = string.Format("{0} {1}: ({2}:{3}) {4}", time, strlogType, strippedFile, line, message);
+        string strippedFile = file!.Replace(GetThisPath(), string.Empty);
+        string msg = string.Format("{0} {1}: ({2}:{3}) {4}", time, strlogType, strippedFile, line, message);
 
         lock (m_lock)
         {
@@ -63,7 +63,7 @@ public class Logger : Singleton<Logger>
 
             if (m_console != null)
             {
-                var hStdout = Kernel32.GetStdHandle(Kernel32.STD_OUTPUT_HANDLE);
+                IntPtr hStdout = Kernel32.GetStdHandle(Kernel32.STD_OUTPUT_HANDLE);
 
                 switch (logType)
                 {

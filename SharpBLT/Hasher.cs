@@ -7,10 +7,10 @@ public static class Hasher
 {
     private static void GetDirectories(HashAlgorithm sha, string directory, Dictionary<string, string> dict)
     {
-        foreach (var path in Directory.GetFiles(directory, "*.*", SearchOption.TopDirectoryOnly))
+        foreach (string path in Directory.GetFiles(directory, "*.*", SearchOption.TopDirectoryOnly))
         {
-            using var stream = File.OpenRead(path);
-            var hash = sha.ComputeHash(stream);
+            using FileStream stream = File.OpenRead(path);
+            byte[] hash = sha.ComputeHash(stream);
             dict.Add(path, BitConverter.ToString(hash).Replace("-", string.Empty));
         }
 
@@ -29,19 +29,19 @@ public static class Hasher
     {
         ArgumentNullException.ThrowIfNull(directory);
 
-        using var sha256 = SHA256.Create();
-        var dict = new Dictionary<string, string>();
+        using SHA256 sha256 = SHA256.Create();
+        Dictionary<string, string> dict = [];
 
         GetDirectories(sha256, directory, dict);
 
-        var hashes = dict.OrderBy(x => x.Key.ToLower(), StringComparer.Ordinal);
+        IOrderedEnumerable<KeyValuePair<string, string>> hashes = dict.OrderBy(x => x.Key.ToLower(), StringComparer.Ordinal);
 
         StringBuilder result = new();
 
-        foreach (var keyValuePair in hashes)
+        foreach (KeyValuePair<string, string> keyValuePair in hashes)
             result.Append(keyValuePair.Value);
 
-        var hash = sha256.ComputeHash(Encoding.Default.GetBytes(result.ToString().ToLower()));
+        byte[] hash = sha256.ComputeHash(Encoding.Default.GetBytes(result.ToString().ToLower()));
         return BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
     }
 
@@ -49,11 +49,11 @@ public static class Hasher
     {
         ArgumentNullException.ThrowIfNull(file);
 
-        using var sha256 = SHA256.Create();
-        using var stream = File.OpenRead(file);
+        using SHA256 sha256 = SHA256.Create();
+        using FileStream stream = File.OpenRead(file);
 
-        var hash = sha256.ComputeHash(stream);
-        var strHash = BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
+        byte[] hash = sha256.ComputeHash(stream);
+        string strHash = BitConverter.ToString(hash).Replace("-", string.Empty).ToLower();
 
         hash = sha256.ComputeHash(Encoding.Default.GetBytes(strHash));
 

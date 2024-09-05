@@ -36,11 +36,11 @@ internal class HttpEventQueue : Singleton<HttpEventQueue>
     {
         lock (_lock)
         {
-            while (_progressQueue.TryDequeue(out var tuple))
+            while (_progressQueue.TryDequeue(out Tuple<Action<HttpEventData, long, long>, HttpEventData, long, long>? tuple))
             {
                 tuple.Item1.Invoke(tuple.Item2, tuple.Item3, tuple.Item4);
             }
-            while (_doneQueue.TryDequeue(out var tuple))
+            while (_doneQueue.TryDequeue(out Tuple<Action<HttpEventData, byte[]>, HttpEventData, byte[]>? tuple))
             {
                 tuple.Item1.Invoke(tuple.Item2, tuple.Item3);
             }

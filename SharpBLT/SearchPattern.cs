@@ -9,7 +9,7 @@ public sealed class SearchPattern
         public sbyte Nibble;
     };
 
-    private static readonly NibblePattern Wildcard = new NibblePattern { Nibble = -16 };
+    private static readonly NibblePattern Wildcard = new() { Nibble = -16 };
 
     private readonly NibblePattern[] m_nibbles;
 
@@ -19,7 +19,7 @@ public sealed class SearchPattern
 
         int i = 0;
 
-        foreach (var c in pattern)
+        foreach (char c in pattern)
         {
             if (c >= '0' && c <= '9')
                 m_nibbles[i++] = new NibblePattern() { Nibble = (sbyte)(c - '0') };
@@ -41,12 +41,12 @@ public sealed class SearchPattern
 
         while (pCurrent < pEnd)
         {
-            var pStart = pCurrent;
+            IntPtr pStart = pCurrent;
 
             sbyte rShift = 4;
             bool bFound = true;
 
-            foreach (var it in m_nibbles)
+            foreach (NibblePattern it in m_nibbles)
             {
                 if (it.Nibble != Wildcard.Nibble)
                 {
@@ -76,7 +76,7 @@ public sealed class SearchPattern
     {
         int space = 0;
 
-        foreach (var c in pattern)
+        foreach (char c in pattern)
         {
             if (c == ' ')
                 ++space;

@@ -66,11 +66,11 @@ public class LuaMod
 
         validate_mod_base();
 
-        var result = Lua.luaL_loadfilex(L, "mods/base/base.lua");
+        int result = Lua.luaL_loadfilex(L, "mods/base/base.lua");
 
         if (result == Lua.LUA_ERRSYNTAX)
         {
-            Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
+            Logger.Instance().Log(LogType.Error, Lua.lua_tostring(L, -1));
             return;
         }
 
@@ -78,7 +78,7 @@ public class LuaMod
 
         if (result == Lua.LUA_ERRRUN)
         {
-            Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
+            Logger.Instance().Log(LogType.Error, Lua.lua_tostring(L, -1));
             return;
         }
 
@@ -119,7 +119,7 @@ public class LuaMod
             return 0;
         }
 
-        var lua_call_hook = Lua.GetNewCallFunctionHook();
+        Hook<Lua.lua_call_fn> lua_call_hook = Lua.GetNewCallFunctionHook();
 
         if (Lua.lua_toboolean(L, 1))
         {
@@ -225,7 +225,7 @@ public class LuaMod
 
         for (int i = 0; i < top; ++i)
         {
-            string str = Lua.lua_tolstring(L, i + 1, out _);
+            string str = Lua.lua_tostring(L, i + 1);
             Logger.Instance().Log(LogType.Lua, (i > 0 ? "    " : "") + str);
         }
 
@@ -249,7 +249,7 @@ public class LuaMod
         // the error message onto the stack, which should manually be popped off when done using to keep the stack balanced
         if (result == Lua.LUA_ERRRUN)
         {
-            Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
+            Logger.Instance().Log(LogType.Error, Lua.lua_tostring(L, -1));
             // This call pops the error message off the stack
             Lua.lua_pop(L, 1);
             return 0;
@@ -296,14 +296,14 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string filename = Lua.lua_tolstring(L, 1, out _);
+        string filename = Lua.lua_tostring(L, 1);
 
         //Logger.Instance().Log(LogType.Lua, $"luaF_dofile: {filename}");
 
         int error = Lua.luaL_loadfilex(L, filename);
         if (error != 0)
         {
-            Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
+            Logger.Instance().Log(LogType.Error, Lua.lua_tostring(L, -1));
         }
         else
         {
@@ -321,7 +321,7 @@ public class LuaMod
             error = Lua.lua_pcall(L, 0, 0, errorhandler);
             if (error == Lua.LUA_ERRRUN)
             {
-                Logger.Instance().Log(LogType.Error, Lua.lua_tolstring(L, -1, out _));
+                Logger.Instance().Log(LogType.Error, Lua.lua_tostring(L, -1));
                 // This call pops the error message off the stack
                 Lua.lua_pop(L, 1);
             }
@@ -337,8 +337,8 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string archivePath = Lua.lua_tolstring(L, 1, out _);
-        string extractPath = Lua.lua_tolstring(L, 2, out _);
+        string archivePath = Lua.lua_tostring(L, 1);
+        string extractPath = Lua.lua_tostring(L, 2);
 
         ZipFile.ExtractToDirectory(archivePath, extractPath);
 
@@ -357,7 +357,7 @@ public class LuaMod
         }
 
         int functionReference = Lua.luaL_ref(L, Lua.LUA_REGISTRYINDEX);
-        string url = Lua.lua_tolstring(L, 1, out _);
+        string url = Lua.lua_tostring(L, 1);
 
         _httpRequestCounter++;
         int requestId = _httpRequestCounter;
@@ -443,7 +443,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string dir = Lua.lua_tolstring(L, 1, out _);
+        string dir = Lua.lua_tostring(L, 1);
 
         try
         {
@@ -465,7 +465,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string dir = Lua.lua_tolstring(L, 1, out _);
+        string dir = Lua.lua_tostring(L, 1);
 
         Lua.lua_pushboolean(L, Directory.Exists(dir));
 
@@ -476,7 +476,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string path = Lua.lua_tolstring(L, 1, out _);
+        string path = Lua.lua_tostring(L, 1);
 
         string hash = Hasher.GetDirectoryHash(path);
 
@@ -489,7 +489,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string path = Lua.lua_tolstring(L, 1, out _);
+        string path = Lua.lua_tostring(L, 1);
 
         Lua.lua_pushboolean(L, File.Exists(path));
 
@@ -500,7 +500,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string path = Lua.lua_tolstring(L, 1, out _);
+        string path = Lua.lua_tostring(L, 1);
 
         string hash = Hasher.GetFileHash(path);
 
@@ -513,8 +513,8 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string src = Lua.lua_tolstring(L, 1, out _);
-        string dst = Lua.lua_tolstring(L, 2, out _);
+        string src = Lua.lua_tostring(L, 1);
+        string dst = Lua.lua_tostring(L, 2);
 
         try
         {
@@ -533,7 +533,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string path = Lua.lua_tolstring(L, 1, out _);
+        string path = Lua.lua_tostring(L, 1);
 
         DirectoryInfo dirInfo = Directory.CreateDirectory(path);
 
@@ -546,7 +546,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string dir = Lua.lua_tolstring(L, 1, out _);
+        string dir = Lua.lua_tostring(L, 1);
         string[] directories;
 
         try
@@ -567,7 +567,7 @@ public class LuaMod
         Lua.lua_createtable(L, 0, 0);
 
         int index = 1;
-        foreach (var it in directories)
+        foreach (string it in directories)
         {
             if (it == "." || it == "..")
                 continue;
@@ -601,7 +601,7 @@ public class LuaMod
     {
         //int n = Lua.lua_gettop(L);
 
-        string xml = Lua.lua_tolstring(L, 1, out _);
+        string xml = Lua.lua_tostring(L, 1);
 
         try
         {

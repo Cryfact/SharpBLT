@@ -9,7 +9,7 @@ public sealed class SearchRange
 
     static SearchRange()
     {
-        var hModule = Kernel32.GetModuleHandle(null);
+        IntPtr hModule = Kernel32.GetModuleHandle(null);
 
         if (hModule == IntPtr.Zero)
             throw new Exception("Failed to get current Module Handle");

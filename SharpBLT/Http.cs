@@ -12,11 +12,11 @@ public sealed class Http
     {
         try
         {
-            var httpClient = _httpClientFactory.GetHttpClient(url);
-            using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            var len = response.Content.Headers.ContentLength;
+            HttpClient httpClient = _httpClientFactory.GetHttpClient(url);
+            using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            long? len = response.Content.Headers.ContentLength;
 
-            using var target = new MemoryStream();
+            using MemoryStream target = new();
 
             if (onProgress == null || !len.HasValue)
             {
@@ -25,8 +25,8 @@ public sealed class Http
             }
             else
             {
-                using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
-                var buffer = new byte[HTTP_BUFFER_SIZE];
+                using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken);
+                byte[] buffer = new byte[HTTP_BUFFER_SIZE];
                 long totalBytes = len.Value;
                 long totalBytesRead = 0;
                 int bytesRead;

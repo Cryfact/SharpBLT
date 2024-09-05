@@ -10,13 +10,13 @@ internal static class Kernel32
 
     public const int STD_OUTPUT_HANDLE = -11;
 
-    public const ushort FOREGROUND_BLUE      = 0x0001; // text color contains blue.
-    public const ushort FOREGROUND_GREEN     = 0x0002; // text color contains green.
-    public const ushort FOREGROUND_RED       = 0x0004; // text color contains red.
+    public const ushort FOREGROUND_BLUE = 0x0001; // text color contains blue.
+    public const ushort FOREGROUND_GREEN = 0x0002; // text color contains green.
+    public const ushort FOREGROUND_RED = 0x0004; // text color contains red.
     public const ushort FOREGROUND_INTENSITY = 0x0008; // text color is intensified.
-    public const ushort BACKGROUND_BLUE      = 0x0010; // background color contains blue.
-    public const ushort BACKGROUND_GREEN     = 0x0020; // background color contains green.
-    public const ushort BACKGROUND_RED       = 0x0040; // background color contains red.
+    public const ushort BACKGROUND_BLUE = 0x0010; // background color contains blue.
+    public const ushort BACKGROUND_GREEN = 0x0020; // background color contains green.
+    public const ushort BACKGROUND_RED = 0x0040; // background color contains red.
     public const ushort BACKGROUND_INTENSITY = 0x0080; // background color is intensified.
 
     [Flags]
@@ -113,15 +113,15 @@ internal static class Kernel32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool FreeLibrary(IntPtr hModule);
 
-    public static T? GetProcAddress<T>(IntPtr hModule, string procName) where T: Delegate
+    public static T? GetProcAddress<T>(IntPtr hModule, string procName) where T : Delegate
     {
-        var type = typeof(T);
+        Type type = typeof(T);
 
         if (type.GetCustomAttribute<UnmanagedFunctionPointerAttribute>() == null)
             throw new InvalidOperationException($"Invalid Delegate '{type.FullName}' passed to '{nameof(GetProcAddress)}'");
 
 
-        var ptr = GetProcAddress(hModule, procName);
+        IntPtr ptr = GetProcAddress(hModule, procName);
 
         if (ptr == IntPtr.Zero)
             return null;
