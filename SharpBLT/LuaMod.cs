@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml;
 
@@ -674,16 +675,13 @@ public class LuaMod
         public uint it;       // Internal object tag (must overlap with MSW of number)
     }
 
-    private static unsafe TValue** GetTValuePtr(IntPtr L)
+    private static unsafe ref TValue GetTValuePtr(IntPtr L)
     {
-        // Adjust the pointer according to the C++ offset logic
-        byte* ptr = (byte*)L.ToPointer();
-        ptr += 16; // Offset where Lua stack starts
-        return (TValue**)ptr;
+        return ref Unsafe.AsRef<TValue>(*(TValue**)(L + (sizeof(IntPtr) * 2)));
     }
 
     // Basically the same thing as lua_topointer
-    private static unsafe int luaF_structid(IntPtr L)
+    private static int luaF_structid(IntPtr L)
     {
         int n = Lua.lua_gettop(L);
 
@@ -694,15 +692,15 @@ public class LuaMod
 
         IntPtr valuePtr = IntPtr.Zero;
 
-        TValue** value = GetTValuePtr(L);
+        ref TValue value = ref GetTValuePtr(L);
 
         if (Lua.lua_type(L, 1) == Lua.LUA_TUSERDATA || Lua.lua_islightuserdata(L, 1))
         {
             valuePtr = Lua.lua_touserdata(L, 1);
         }
-        else if ((*value)->it > (~13u))
+        else if (value.it > (~13u))
         {
-            valuePtr = (IntPtr)(ulong)(*value)->gcptr32;
+            valuePtr = (IntPtr)(ulong)value.gcptr32;
         }
         else
         {

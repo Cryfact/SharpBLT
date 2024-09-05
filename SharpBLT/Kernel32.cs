@@ -1,5 +1,6 @@
 ﻿namespace SharpBLT;
 
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 internal static class Kernel32
@@ -101,5 +102,28 @@ internal static class Kernel32
 
     [DllImport("kernel32.dll")]
     public static extern uint GetCurrentThreadId();
+
+    [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
+    public static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
+
+
+    public static T? GetProcAddress<T>(IntPtr hModule, string procName) where T: Delegate
+    {
+        var type = typeof(T);
+
+        if (type.GetCustomAttribute<UnmanagedFunctionPointerAttribute>() == null)
+            throw new InvalidOperationException($"Invalid Delegate '{type.FullName}' passed to '{nameof(GetProcAddress)}'");
+
+
+        var ptr = GetProcAddress(hModule, procName);
+
+        if (ptr == IntPtr.Zero)
+            return null;
+
+        return Marshal.GetDelegateForFunctionPointer<T>(ptr);
+    }
 
 }
