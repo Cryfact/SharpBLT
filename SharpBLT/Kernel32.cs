@@ -103,12 +103,15 @@ internal static class Kernel32
     [DllImport("kernel32.dll")]
     public static extern uint GetCurrentThreadId();
 
-    [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
     private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
     public static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool FreeLibrary(IntPtr hModule);
 
     public static T? GetProcAddress<T>(IntPtr hModule, string procName) where T: Delegate
     {
