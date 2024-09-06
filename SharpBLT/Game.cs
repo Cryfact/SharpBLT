@@ -14,7 +14,6 @@ public class Game
     private static application_update_fn old_application_update;
 
     private static uint ms_main_thread_id;
-    //private static int ms_updates;
 #pragma warning restore CS8618
 
 
@@ -33,20 +32,8 @@ public class Game
         if (Kernel32.GetCurrentThreadId() != ms_main_thread_id)
             return old_application_update(_this, unk0);
 
-        // TODO: need?
-        //if (ms_updates == 0)
-        //{
-        //    // if (!pd2hook::HTTPManager::GetSingleton()->AreLocksInit())
-        //    //  pd2hook::HTTPManager::GetSingleton()->init_locks();
-        //    ++ms_updates;
-        //}
-        //if (ms_updates > 1)
-        //{
         HttpEventQueue.Instance().ProcessEvents();
-        //}
 
-        // TODO: need?
-        //ms_updates++;
         return old_application_update(_this, unk0);
     }
 }

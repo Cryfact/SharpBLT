@@ -723,9 +723,9 @@ public class LuaMod
     {
         string file = Lua.lua_tostring(L, 1);
 
-        // TODO: implement this
         try
         {
+            // TODO: implement this
             throw new NotImplementedException();
             //blt::plugins::Plugin* plugin = NULL;
             //blt::plugins::PluginLoadResult result = blt::plugins::LoadPlugin(file, &plugin);
@@ -745,7 +745,6 @@ public class LuaMod
 
             //Lua.lua_insert(L, -1 - count);
             //return count + 1;
-
         }
         catch (Exception e)
         {
