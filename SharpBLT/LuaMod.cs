@@ -57,8 +57,8 @@ public class LuaMod
 		    new("xpcall", luaF_xpcall),
             new("parsexml", luaF_parsexml),
             new("structid", luaF_structid),
-            //new("ignoretweak", luaF_ignoretweak), // TODO?
-            //new("load_native", luaF_load_native), // TODO? ooof!
+            new("ignoretweak", luaF_ignoretweak),
+            new("load_native", luaF_load_native)
         ];
         Lua.luaI_openlib(L, "blt", bltLib, 0);
 
@@ -706,48 +706,51 @@ public class LuaMod
         return 1;
     }
 
-    //private static int luaF_ignoretweak(lua_State* L)
-    //{
-    //    blt::idfile file;
+    private static int luaF_ignoretweak(IntPtr L)
+    {
+        IdFile idFile = new(
+            Lua.luaX_toidstring(L, 1),
+            Lua.luaX_toidstring(L, 2)
+        );
 
-    //    file.name = luaX_toidstring(L, 1);
-    //    file.ext = luaX_toidstring(L, 2);
+        // TODO: implement Tweaker
+        //tweaker::ignore_file(idFile);
 
-    //    tweaker::ignore_file(file);
+        return 0;
+    }
 
-    //    return 0;
-    //}
+    private static int luaF_load_native(IntPtr L)
+    {
+        string file = Lua.lua_tostring(L, 1);
 
-    //private static int luaF_load_native(IntPtr L)
-    //{
-    //    string file = Lua.lua_tostring(L, 1);
+        // TODO: implement this
+        try
+        {
+            throw new NotImplementedException();
+            //blt::plugins::Plugin* plugin = NULL;
+            //blt::plugins::PluginLoadResult result = blt::plugins::LoadPlugin(file, &plugin);
 
-    //    try
-    //    {
-    //        blt::plugins::Plugin* plugin = NULL;
-    //        blt::plugins::PluginLoadResult result = blt::plugins::LoadPlugin(file, &plugin);
+            //// TODO some kind of UUID system to prevent issues with multiple mods having the same DLL
 
-    //        // TODO some kind of UUID system to prevent issues with multiple mods having the same DLL
+            //int count = plugin->PushLuaValue(L);
 
-    //        int count = plugin->PushLuaValue(L);
+            //if (result == blt::plugins::plr_AlreadyLoaded)
+            //{
+            //    Lua.lua_pushstring(L, "Already loaded");
+            //}
+            //else
+            //{
+            //    Lua.lua_pushboolean(L, true);
+            //}
 
-    //        if (result == blt::plugins::plr_AlreadyLoaded)
-    //        {
-    //            Lua.lua_pushstring(L, "Already loaded");
-    //        }
-    //        else
-    //        {
-    //            Lua.lua_pushboolean(L, true);
-    //        }
+            //Lua.lua_insert(L, -1 - count);
+            //return count + 1;
 
-    //        Lua.lua_insert(L, -1 - count);
-    //        return count + 1;
-
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        Lua.luaL_error(L, e.Message);
-    //        return 0; // Fix the no-return compiler warning, but this will never be called
-    //    }
-    //}
+        }
+        catch (Exception e)
+        {
+            Lua.luaL_error(L, e.Message);
+            return 0; // Fix the no-return compiler warning, but this will never be called
+        }
+    }
 }

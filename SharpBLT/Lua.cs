@@ -1,5 +1,6 @@
 ﻿namespace SharpBLT;
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -312,7 +313,6 @@ public sealed class Lua
         return ms_lua_call_hook;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_pop(IntPtr L, int arg0)
     {
@@ -613,6 +613,27 @@ public sealed class Lua
     }
 
     #region "laux"
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IdString luaX_toidstring(IntPtr L, int index)
+    {
+        IntPtr ptr = lua_touserdata(L, index);
+        ulong idValue = (ulong)Marshal.ReadInt64(ptr);
+        return new IdString(ReverseBytes(idValue));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ulong ReverseBytes(ulong value)
+    {
+        return ((value & 0x00000000000000FFUL) << 56) |
+                ((value & 0x000000000000FF00UL) << 40) |
+                ((value & 0x0000000000FF0000UL) << 24) |
+                ((value & 0x00000000FF000000UL) << 8) |
+                ((value & 0x000000FF00000000UL) >> 8) |
+                ((value & 0x0000FF0000000000UL) >> 24) |
+                ((value & 0x00FF000000000000UL) >> 40) |
+                ((value & 0xFF00000000000000UL) >> 56);
+    }
 
     private static int luaL_argerror(IntPtr L, int narg, string extramsg)
     {
