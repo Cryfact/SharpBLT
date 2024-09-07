@@ -12,8 +12,16 @@ public class LuaMod
 {
     static int _httpRequestCounter = 0;
 
+    static bool _setupCheckDone = false;
+
     public static void Initialize(IntPtr L)
     {
+        if (!_setupCheckDone)
+        {
+            _setupCheckDone = true;
+            validate_mod_base();
+        }
+
         Lua.lua_pushcclosure(L, luaF_print, 0);
         Lua.lua_setfield(L, Lua.LUA_GLOBALSINDEX, "log");
 
@@ -70,8 +78,6 @@ public class LuaMod
 
         Logger.Instance().Log(LogType.Log, $"Loading SharpBLT Lua base mod onto {L}");
 
-        validate_mod_base();
-
         int result = Lua.luaL_loadfilex(L, "mods/base/base.lua");
 
         if (result == Lua.LUA_ERRSYNTAX)
@@ -93,20 +99,31 @@ public class LuaMod
 
     private static void validate_mod_base()
     {
-        // TODO: Implement this
-        //if (!std::filesystem::exists("mods/base/mod.xml") || !std::filesystem::exists("mods/base/base.lua"))
+        if ((!File.Exists("mods/base/mod.txt") && !File.Exists("mods/base/mod.xml")) || !File.Exists("mods/base/base.lua"))
+        {
+            // TODO: put new link for SharpBLT (and implement Http.DownloadFile)
+            throw new ApplicationException("No lua base mod found!");
+
+            //Logger.Instance().Log(LogType.Log, "Downloading Mod Base");
+            //Http.DownloadFile("https://api.modworkshop.net/mods/21618/download", "mods/base.zip");
+            //ZipFile.ExtractToDirectory("mods/base.zip", "mods");
+            //if (File.Exists("mods/base.zip"))
+            //    File.Delete("mods/base.zip");
+        }
+        if (!File.Exists("mods/base/mod.txt") || !File.Exists("mods/base/supermod.xml") || !Directory.Exists("mods/base/wren"))
+        {
+            _ = User32.MessageBox(IntPtr.Zero,
+                "It appears you have a RaidBLT basemod. This is incompatible with SharpBLT.\nPlease delete your 'mods/base' folder, and run the game again to automatically download a compatible version",
+                "SharpBLT basemod outdated", User32.MB_OK);
+            throw new ApplicationException("RaidBLT lua base mod installed!");
+        }
+        // TODO: find/create a way to also check for SuperBLT differences here.
+        //if ()
         //{
-        //    PD2HOOK_LOG_LOG("Downloading Mod Base");
-        //
-        //    if (!pd2hook::HTTPManager::GetSingleton()->AreLocksInit())
-        //        pd2hook::HTTPManager::GetSingleton()->init_locks();
-        //
-        //    pd2hook::HTTPManager::GetSingleton()->DownloadFile("https://api.modworkshop.net/mods/21618/download", "mods/base.zip");
-        //
-        //    pd2hook::ExtractZIPArchive("mods/base.zip", "mods");
-        //
-        //    if (std::filesystem::exists("mods/base.zip"))
-        //        std::filesystem::remove("mods/base.zip");
+        //    _ = User32.MessageBox(IntPtr.Zero,
+        //        "It appears you have a SuperBLT basemod. This is incompatible with SharpBLT.\nPlease delete your 'mods/base' folder, and run the game again to automatically download a compatible version",
+        //        "SharpBLT basemod outdated", User32.MB_OK);
+        //    throw new ApplicationException("SuperBLT lua base mod installed!");
         //}
     }
 
@@ -233,6 +250,11 @@ public class LuaMod
         {
             string str = Lua.lua_tostring(L, i + 1);
             Logger.Instance().Log(LogType.Lua, (i > 0 ? "    " : "") + str);
+
+            if (Lua.lua_isboolean(L, i + 1))
+            {
+                // TODO
+            }
         }
 
         return 0;

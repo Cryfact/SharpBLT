@@ -7,7 +7,10 @@ public readonly struct IdString(ulong value) : IComparable<IdString>, IEquatable
     private readonly ulong _value = value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override readonly string ToString() => $"Idstring(@ID{_value:x16}@)";
+    public string ToHexString() => $"{_value: x16}";
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override readonly string ToString() => $"Idstring(@ID{ToHexString()}@)";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override readonly bool Equals(object? obj)

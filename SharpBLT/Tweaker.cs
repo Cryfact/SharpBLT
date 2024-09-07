@@ -60,7 +60,7 @@ public static class Tweaker
         }
 
         // Transform the file (You'd replace this with the actual transform logic).
-        string newText = TransformFile(text);
+        string newText = WrenLoader.TransformFile(text);
 
         // If no transformation is needed, return the original pointer.
         if (newText == text)
@@ -93,11 +93,5 @@ public static class Tweaker
     public static void IgnoreFile(IdFile file)
     {
         ignoredFiles.Add(file);
-    }
-
-    private static string TransformFile(string text)
-    {
-        // TODO: Wren
-        return text;
     }
 }
