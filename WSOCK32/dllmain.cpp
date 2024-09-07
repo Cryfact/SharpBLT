@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "wsock.h"
 #include <DotNetHost.h>
+#include "wren.h"
 
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -16,7 +17,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         if (!Init_wsock())
             return FALSE;
 
-        LoadDotNetRuntime();
+        wren_functions functions;
+
+        init_wren_functions(&functions);
+        LoadDotNetRuntime(&functions);
+
         break;
     }
     case DLL_THREAD_ATTACH:

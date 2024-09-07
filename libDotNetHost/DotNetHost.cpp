@@ -25,10 +25,10 @@ static hostfxr_close_fn close_fptr;
 #endif
 
 
-void LoadDotNetRuntime()
+void LoadDotNetRuntime(void* param)
 {
 #ifdef __USING_NATIVE_AOT__
-    using EntryPointFn = void(*)(); 
+    using EntryPointFn = void(*)(void*); 
 
     HMODULE hModule = LoadLibraryA("mods\\base\\SharpBLT.dll");
 
@@ -46,7 +46,7 @@ void LoadDotNetRuntime()
         return;
     }
 
-    entrypoint();
+    entrypoint(param);
 #else
     string runtimePath(MAX_PATH, '\0');
 

@@ -54,7 +54,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>../libDotNetHost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../libDotNetHost;../wren/wren/src/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -76,7 +76,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>../libDotNetHost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../libDotNetHost;../wren/wren/src/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="wren.cpp" />
     <ClCompile Include="wsock.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -99,11 +100,15 @@
     <None Include="wsock.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="wren.h" />
     <ClInclude Include="wsock.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libDotNetHost\libDotNetHost.vcxproj">
       <Project>{7d849419-8aeb-4390-ae58-5c5ebc91c622}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\wren\wren.vcxproj">
+      <Project>{0143a07c-ed79-a10d-9666-8710827c1d0f}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

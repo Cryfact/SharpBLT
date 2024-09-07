@@ -17,6 +17,9 @@
     <ClCompile Include="wsock.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="wren.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="wsock.def">
@@ -26,6 +29,9 @@
   <ItemGroup>
     <ClInclude Include="wsock.h">
       <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="wren.h">
+      <Filter>Quelldateien</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
