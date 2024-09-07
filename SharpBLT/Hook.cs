@@ -19,6 +19,9 @@ public sealed class Hook<TDelegate> where TDelegate : Delegate
 
     public TDelegate OldFunction => IsEnabled ? m_trampoline : m_target;
 
+
+    public IntPtr Address => m_address;
+
     public Hook(IntPtr address, TDelegate target)
     {
         m_address = address;

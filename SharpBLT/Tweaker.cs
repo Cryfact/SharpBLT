@@ -19,61 +19,67 @@ public static class Tweaker
     private static IdFile lastParsed;
 
     // Method to tweak Raid XML files. Takes the XML as a string and processes it.
-    public static IntPtr TweakRaidXml(IntPtr textPtr, int textLength)
+    public static IntPtr TweakRaidXml(IntPtr textPtr, int textLength, out int newLen)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
         // TODO: implement Raid.LastLoadedName, Raid.LastLoadedExt, then uncomment !
 
-        //if (!TweakerEnabled)
-        //{
-        //    return textPtr;
-        //}
+        if (!TweakerEnabled)
+        {
+            newLen = textLength;
+            return textPtr;
+        }
 
-        //// Convert IntPtr to string
-        //string text = Marshal.PtrToStringAnsi(textPtr, textLength);
+        // Convert IntPtr to string
+        string text = Marshal.PtrToStringAnsi(textPtr, textLength);
 
-        //IdFile file = new IdFile(Raid.LastLoadedName, Raid.LastLoadedExt);
+        IdFile file = new IdFile(Raid.LastLoadedName, Raid.LastLoadedExt);
 
-        //// Check if this is the same file being parsed again.
-        //if (lastParsed == file)
-        //{
-        //    return textPtr;
-        //}
+        // Check if this is the same file being parsed again.
+        if (lastParsed == file)
+        {
+            newLen = textLength;
+            return textPtr;
+        }
 
-        //lastParsed = file;
+        lastParsed = file;
 
-        //// Ignore .model and .texture files
-        //if (file.Ext.Equals(0xaf612bbc207e00bdUL) ||  // idstring("model")
-        //    file.Ext.Equals(0x5368e150b05a5b8cUL))   // idstring("texture")
-        //{
-        //    return textPtr;
-        //}
+        // Ignore .model and .texture files
+        if (file.Ext.Equals(0xaf612bbc207e00bdUL) ||  // idstring("model")
+            file.Ext.Equals(0x5368e150b05a5b8cUL))   // idstring("texture")
+        {
+            newLen = textLength;
+            return textPtr;
+        }
 
-        //// Check if the file is in the ignored list.
-        //if (ignoredFiles.Contains(file))
-        //{
-        //    return textPtr;
-        //}
+        // Check if the file is in the ignored list.
+        if (ignoredFiles.Contains(file))
+        {
+            newLen = textLength;
+            return textPtr;
+        }
 
-        //// Transform the file (You'd replace this with the actual transform logic).
-        //string newText = TransformFile(text);
+        // Transform the file (You'd replace this with the actual transform logic).
+        string newText = TransformFile(text);
 
-        //// If no transformation is needed, return the original pointer.
-        //if (newText == text)
-        //{
-        //    return textPtr;
-        //}
+        // If no transformation is needed, return the original pointer.
+        if (newText == text)
+        {
+            newLen = textLength;
+            return textPtr;
+        }
 
-        //// Allocate new memory for the transformed text and copy it.
-        //int newLength = newText.Length + 1;
-        //IntPtr buffer = Marshal.AllocHGlobal(newLength);
-        //buffers.Add(buffer);
+        // Allocate new memory for the transformed text and copy it.
+        int newLength = newText.Length + 1;
+        IntPtr buffer = Marshal.AllocHGlobal(newLength);
+        buffers.Add(buffer);
 
-        //// Copy string into unmanaged memory (accounting for null termination)
-        //Marshal.Copy(newText.ToCharArray(), 0, buffer, newText.Length);
-        //Marshal.WriteByte(buffer, newLength - 1, 0); // Null-terminate the string
+        // Copy string into unmanaged memory (accounting for null termination)
+        Marshal.Copy(newText.ToCharArray(), 0, buffer, newText.Length);
+        Marshal.WriteByte(buffer, newLength - 1, 0); // Null-terminate the string
 
-        //return buffer;
+        newLen = newText.Length;
+        return buffer;
     }
 
     public static void FreeTweakedRaidXml(IntPtr textPtr)
