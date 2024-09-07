@@ -4,9 +4,6 @@ using System.Runtime.InteropServices;
 
 public class Program
 {
-    public static void Main(string[] _)
-    { }
-
     private static void ValidateModDirectories()
     {
         if (!Directory.Exists("mods/downloads"))
@@ -21,7 +18,7 @@ public class Program
     }
 
     [UnmanagedCallersOnly(EntryPoint = "NativeMain")]
-    public static void NativeMain()
+    public static void NativeMain(IntPtr ptr)
     {
         ValidateModDirectories();
 
@@ -33,5 +30,6 @@ public class Program
 
         Game.Initialize();
         Lua.Initialize();
+        Wren.Initialize(ptr);
     }
 }
