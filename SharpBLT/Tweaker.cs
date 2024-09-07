@@ -6,17 +6,17 @@ using System.Runtime.InteropServices;
 
 public static class Tweaker
 {
-    // Static variable to enable/disable tweaker functionality.
-    public static bool TweakerEnabled = true;
-
     // HashSet to manage the buffers we need to track for memory management.
-    private static HashSet<IntPtr> buffers = [];
+    private static readonly HashSet<IntPtr> buffers = [];
 
     // Set to keep track of files that should be ignored.
-    private static SortedSet<IdFile> ignoredFiles = [];
+    private static readonly SortedSet<IdFile> ignoredFiles = [];
 
     // The last parsed file, to avoid processing the same file multiple times.
-    private static IdFile lastParsed;
+    private static IdFile? lastParsed;
+
+    // Static property to enable/disable tweaker functionality.
+    public static bool TweakerEnabled { get; set; }
 
     // Method to tweak Raid XML files. Takes the XML as a string and processes it.
     public static IntPtr TweakRaidXml(IntPtr textPtr, int textLength, out int newLen)

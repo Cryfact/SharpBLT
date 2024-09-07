@@ -1,6 +1,8 @@
 ﻿namespace SharpBLT;
 
+using SharpBLT.Plugins;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -124,7 +126,7 @@ public sealed class Lua
 
     [FunctionPattern("40 53 48 83 EC 20 48 8B D9 81 FA 40 1F 00 00 7F")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_checkstack_fn(IntPtr luaState, int arg0);
+    public delegate int lua_checkstack_fn(IntPtr luaState, int arg0);
 
     [FunctionPattern("48 83 EC 28 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 53 28 48 8B 00")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -153,6 +155,10 @@ public sealed class Lua
     [FunctionPattern("48 83 EC 28 4C 8B D9 E8 B4 D9 FE FF 48 8B D0 48")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int lua_type_fn(IntPtr luaState, int arg0);
+
+    [FunctionPattern("8D 42 01 48 98 48 8D 0D")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate IntPtr lua_typename_fn(IntPtr luaState, int arg0);
 
     [FunctionPattern("45 85 C0 0F 88 ?? ?? ?? ?? 48 89 5C 24 08 48 89")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -204,6 +210,7 @@ public sealed class Lua
     public static readonly lua_rawgeti_fn lua_rawgeti;
     public static readonly lua_rawseti_fn lua_rawseti;
     public static readonly lua_type_fn lua_type;
+    private static readonly lua_typename_fn lua_typename_ptr;
     public static readonly luaL_unref_fn luaL_unref;
     private static readonly luaL_error_fn luaL_error_ptr;
     public static readonly lua_error_fn lua_error;
@@ -261,6 +268,7 @@ public sealed class Lua
         lua_rawgeti = FunctionUtils.ResolveFunction<lua_rawgeti_fn>(nameof(lua_rawgeti));
         lua_rawseti = FunctionUtils.ResolveFunction<lua_rawseti_fn>(nameof(lua_rawseti));
         lua_type = FunctionUtils.ResolveFunction<lua_type_fn>(nameof(lua_type));
+        lua_typename_ptr = FunctionUtils.ResolveFunction<lua_typename_fn>(nameof(lua_typename));
         luaL_unref = FunctionUtils.ResolveFunction<luaL_unref_fn>(nameof(luaL_unref));
         luaL_error_ptr = FunctionUtils.ResolveFunction<luaL_error_fn>(nameof(luaL_error));
         lua_error = FunctionUtils.ResolveFunction<lua_error_fn>(nameof(lua_error));
@@ -375,58 +383,31 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe static string lua_tostring(IntPtr L, int arg0)
-    {
-        return lua_tolstring(L, arg0, out _);
-    }
+    public unsafe static string lua_tostring(IntPtr L, int arg0) => lua_tolstring(L, arg0, out _);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_isfunction(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TFUNCTION;
-    }
+    public static bool lua_isfunction(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TFUNCTION;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_istable(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TTABLE;
-    }
+    public static bool lua_istable(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TTABLE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_islightuserdata(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TLIGHTUSERDATA;
-    }
+    public static bool lua_islightuserdata(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TLIGHTUSERDATA;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_isnil(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TNIL;
-    }
+    public static bool lua_isnil(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TNIL;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_isboolean(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TBOOLEAN;
-    }
+    public static bool lua_isboolean(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TBOOLEAN;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_isthread(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TTHREAD;
-    }
+    public static bool lua_isthread(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TTHREAD;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_isnone(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) == LUA_TNONE;
-    }
+    public static bool lua_isnone(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TNONE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool lua_isnoneornil(IntPtr L, int arg0)
-    {
-        return lua_type(L, arg0) <= 0;
-    }
+    public static bool lua_isnoneornil(IntPtr L, int arg0) => lua_type(L, arg0) <= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void lua_pushstring(IntPtr L, string arg0)
@@ -445,16 +426,10 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void lua_pushlstring(IntPtr L, IntPtr arg0, int length)
-    {
-        lua_pushlstring_ptr(L, arg0, length);
-    }
+    public static void lua_pushlstring(IntPtr L, IntPtr arg0, int length) => lua_pushlstring_ptr(L, arg0, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void lua_pushcclosure(IntPtr L, LuaCallback func, int arg1)
-    {
-        lua_pushcclosure_ptr(L, Marshal.GetFunctionPointerForDelegate(func), arg1);
-    }
+    public static void lua_pushcclosure(IntPtr L, LuaCallback func, int arg1) => lua_pushcclosure_ptr(L, Marshal.GetFunctionPointerForDelegate(func), arg1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void luaI_openlib(IntPtr L, string name, LuaReg[] reg, int arg2)
@@ -481,9 +456,15 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void luaL_openlib(IntPtr L, string name, LuaReg[] reg, int arg2)
+    public static void luaL_openlib(IntPtr L, string name, LuaReg[] reg, int arg2) => luaI_openlib(L, name, reg, arg2);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe static string lua_typename(IntPtr L, int arg0)
     {
-        luaI_openlib(L, name, reg, arg2);
+        IntPtr ptr = lua_typename_ptr(L, arg0);
+        string str = new((sbyte*)ptr);
+
+        return str;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -589,16 +570,7 @@ public sealed class Lua
         return ret;
     }
 
-    internal static bool check_active_state(IntPtr L)
-    {
-        foreach (IntPtr it in ms_activeStates)
-        {
-            if (it == L)
-                return true;
-        }
-
-        return false;
-    }
+    internal static bool check_active_state(IntPtr L) => ms_activeStates.Select(it => it == L).Any();
 
     private static void add_active_state(IntPtr L)
     {
@@ -611,8 +583,6 @@ public sealed class Lua
         ms_activeStates.Remove(L);
         Logger.Instance().Log(LogType.Log, $"Lua-state closed: {L}");
     }
-
-    #region "laux"
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IdString luaX_toidstring(IntPtr L, int index)
@@ -635,16 +605,22 @@ public sealed class Lua
                 ((value & 0xFF00000000000000UL) >> 56);
     }
 
-    private static int luaL_argerror(IntPtr L, int narg, string extramsg)
+    internal static void RegisterPluginForActiveStates(Plugin plugin)
     {
-        return luaL_error(L, "bad argument #%d (%s)", narg, extramsg);
+        foreach (IntPtr state in ms_activeStates)
+        {
+            plugin.AddToState(state);
+        }
     }
 
-    public static void luaL_checkany(IntPtr L, int narg)
+    internal static void UpdatePluginsInActiveStates()
     {
-        if (lua_type(L, narg) == LUA_TNONE)
-            luaL_argerror(L, narg, "value expected");
+        foreach (IntPtr state in ms_activeStates)
+        {
+            foreach (Plugin plugin in PluginManager.GetPlugins())
+            {
+                plugin.Update(state);
+            }
+        }
     }
-
-    #endregion
 }

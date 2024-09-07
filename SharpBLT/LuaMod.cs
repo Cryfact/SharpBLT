@@ -1,5 +1,6 @@
 ﻿namespace SharpBLT;
 
+using SharpBLT.Plugins;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -61,6 +62,11 @@ public class LuaMod
             new("load_native", luaF_load_native)
         ];
         Lua.luaI_openlib(L, "blt", bltLib, 0);
+
+        foreach (Plugin plugin in PluginManager.GetPlugins())
+        {
+            plugin.AddToState(L);
+        }
 
         Logger.Instance().Log(LogType.Log, $"Loading SharpBLT Lua base mod onto {L}");
 
@@ -267,7 +273,7 @@ public class LuaMod
 
     private static int luaF_pcall_proper(IntPtr L)
     {
-        Lua.luaL_checkany(L, 1);
+        Laux.luaL_checkany(L, 1);
         int status = Lua.lua_pcall(L, Lua.lua_gettop(L) - 1, Lua.LUA_MULTRET, 0);
         Lua.lua_pushboolean(L, status == 0);
         Lua.lua_insert(L, 1);
@@ -713,8 +719,7 @@ public class LuaMod
             Lua.luaX_toidstring(L, 2)
         );
 
-        // TODO: implement Tweaker
-        //tweaker::ignore_file(idFile);
+        Tweaker.IgnoreFile(idFile);
 
         return 0;
     }
@@ -725,26 +730,23 @@ public class LuaMod
 
         try
         {
-            // TODO: implement this
-            throw new NotImplementedException();
-            //blt::plugins::Plugin* plugin = NULL;
-            //blt::plugins::PluginLoadResult result = blt::plugins::LoadPlugin(file, &plugin);
+            PluginLoadResult result = PluginManager.LoadPlugin(file, out Plugin? plugin);
 
-            //// TODO some kind of UUID system to prevent issues with multiple mods having the same DLL
+            // TODO some kind of UUID system to prevent issues with multiple mods having the same DLL
 
-            //int count = plugin->PushLuaValue(L);
+            int count = plugin!.PushLuaValue(L);
 
-            //if (result == blt::plugins::plr_AlreadyLoaded)
-            //{
-            //    Lua.lua_pushstring(L, "Already loaded");
-            //}
-            //else
-            //{
-            //    Lua.lua_pushboolean(L, true);
-            //}
+            if (result == PluginLoadResult.AlreadyLoaded)
+            {
+                Lua.lua_pushstring(L, "Already loaded");
+            }
+            else
+            {
+                Lua.lua_pushboolean(L, true);
+            }
 
-            //Lua.lua_insert(L, -1 - count);
-            //return count + 1;
+            Lua.lua_insert(L, -1 - count);
+            return count + 1;
         }
         catch (Exception e)
         {

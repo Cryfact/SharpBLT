@@ -1,6 +1,7 @@
 ﻿namespace SharpBLT;
 
 using System;
+using System.Runtime.CompilerServices;
 
 public class IdFile : IComparable<IdFile>
 {
@@ -9,18 +10,21 @@ public class IdFile : IComparable<IdFile>
     public IdString Name { get; set; }
     public IdString Ext { get; set; }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IdFile()
     {
         Name = IDSTRING_NONE;
         Ext = IDSTRING_NONE;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IdFile(IdString name, IdString ext)
     {
         Name = name;
         Ext = ext;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Equals(object? obj)
     {
         if (obj is IdFile other)
@@ -30,11 +34,13 @@ public class IdFile : IComparable<IdFile>
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode()
     {
         return HashCode.Combine(Name, Ext);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(IdFile? other)
     {
         if (Name != other!.Name)
@@ -44,11 +50,13 @@ public class IdFile : IComparable<IdFile>
         return Ext.CompareTo(other!.Ext);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsEmpty()
     {
         return Name == IDSTRING_NONE && Ext == IDSTRING_NONE;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override string ToString()
     {
         return $"{Name}.{Ext}";
