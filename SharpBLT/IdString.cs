@@ -1,6 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace SharpBLT;
 
-namespace SharpBLT;
+using System.Runtime.CompilerServices;
 
 public readonly struct IdString(ulong value) : IComparable<IdString>, IEquatable<ulong>
 {
