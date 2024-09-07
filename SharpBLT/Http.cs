@@ -52,4 +52,9 @@ public sealed class Http
         }
     }
 
+    public static void DownloadFile(string url, string targetPath)
+    {
+        // TODO: implement
+        throw new NotImplementedException();
+    }
 }

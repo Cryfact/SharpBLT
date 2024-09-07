@@ -250,6 +250,11 @@ public class LuaMod
         {
             string str = Lua.lua_tostring(L, i + 1);
             Logger.Instance().Log(LogType.Lua, (i > 0 ? "    " : "") + str);
+
+            if (Lua.lua_isboolean(L, i + 1))
+            {
+                // TODO
+            }
         }
 
         return 0;
