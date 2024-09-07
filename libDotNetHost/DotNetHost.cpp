@@ -27,6 +27,27 @@ static hostfxr_close_fn close_fptr;
 
 void LoadDotNetRuntime()
 {
+#ifdef __USING_NATIVE_AOT__
+    using EntryPointFn = void(*)(); 
+
+    HMODULE hModule = LoadLibraryA("mods\\base\\SharpBLT.dll");
+
+    if (hModule == nullptr)
+    {
+        MessageBoxA(nullptr, "mods\\base\\SharpBLT.dll not found", "file not found", MB_OK);
+        return;
+    }
+
+    auto entrypoint = reinterpret_cast<EntryPointFn>(GetProcAddress(hModule, "NativeMain"));
+
+    if (entrypoint == nullptr)
+    {
+        MessageBoxA(nullptr, "NativeMain in mods\\base\\SharpBLT.dll not found", "Entrypoint not found", MB_OK);
+        return;
+    }
+
+    entrypoint();
+#else
     string runtimePath(MAX_PATH, '\0');
 
     GetModuleFileName(nullptr, runtimePath.data(), MAX_PATH);
@@ -34,15 +55,7 @@ void LoadDotNetRuntime()
 
     runtimePath.resize(std::wcslen(runtimePath.data()));
 
-#ifdef __USING_NATIVE_AOT__
-    using EntryPointFn = void(*)(); 
 
-    HMODULE hModule = LoadLibraryA("mods\\base\\SharpBLT.dll");
-
-    auto entrypoint = reinterpret_cast<EntryPointFn>(GetProcAddress(hModule, "NativeMain"));
-
-    entrypoint();
-#else
     char_t buffer[MAX_PATH];
     size_t buffer_size = sizeof(buffer) / sizeof(char_t);
     int rc = get_hostfxr_path(buffer, &buffer_size, nullptr);
