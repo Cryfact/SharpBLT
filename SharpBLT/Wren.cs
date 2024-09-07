@@ -291,7 +291,7 @@ public static class Wren
         // collection.
         //
         // If zero, defaults to 10MB.
-        IntPtr initialHeapSize;
+        public IntPtr initialHeapSize;
 
         // After a collection occurs, the threshold for the next collection is
         // determined based on the number of bytes remaining in use. This allows Wren
@@ -303,7 +303,7 @@ public static class Wren
         // back to a usable size.
         //
         // If zero, defaults to 1MB.
-        IntPtr minHeapSize;
+        public IntPtr minHeapSize;
 
         // Wren will resize the heap automatically as the number of bytes
         // remaining in use after a collection changes. This number determines the
@@ -319,10 +319,10 @@ public static class Wren
         // frequent garbage collections.
         //
         // If zero, defaults to 50.
-        int heapGrowthPercent;
+        public int heapGrowthPercent;
 
         // User-defined data associated with the VM.
-        IntPtr userData;
+        public IntPtr userData;
     }
 
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
