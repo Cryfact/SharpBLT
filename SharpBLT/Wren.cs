@@ -35,24 +35,24 @@ namespace SharpBLT
 
         public struct WrenLoadModuleResult
         {
-            IntPtr source;
-            WrenLoadModuleCompleteFn onComplete;
-            IntPtr userData;
+            public IntPtr source;
+            public WrenLoadModuleCompleteFn onComplete;
+            public IntPtr userData;
         }
 
-        struct WrenForeignClassMethods
+        public struct WrenForeignClassMethods
         {
             // The callback invoked when the foreign object is created.
             //
             // This must be provided. Inside the body of this, it must call
             // [wrenSetSlotNewForeign()] exactly once.
-            WrenForeignMethodFn allocate;
+            public WrenForeignMethodFn allocate;
 
             // The callback invoked when the garbage collector is about to collect a
             // foreign object's memory.
             //
             // This may be `NULL` if the foreign class does not need to finalize.
-            WrenFinalizerFn finalize;
+            public WrenFinalizerFn finalize;
         }
 
         [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
@@ -78,7 +78,7 @@ namespace SharpBLT
             [MarshalAs(UnmanagedType.I1)] bool isStatic, IntPtr signature);
 
         [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
-        public delegate IntPtr WrenBindForeignClassFn(IntPtr vm, IntPtr module, IntPtr className);
+        public delegate WrenForeignClassMethods WrenBindForeignClassFn(IntPtr vm, IntPtr module, IntPtr className);
 
         [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
         public delegate IntPtr WrenWriteFn(IntPtr vm, IntPtr test);
@@ -566,93 +566,92 @@ namespace SharpBLT
         [StructLayout(LayoutKind.Sequential)]
         struct WrenFunctions
         {
-            public wrenInitConfigurationFn wrenInitConfiguration;
-            public wrenNewVMFn wrenNewVM;
-            public wrenFreeVMFn wrenFreeVM;
-            public wrenCollectGarbageFn wrenCollectGarbage;
-            public wrenInterpretFn wrenInterpret;
-            public wrenMakeCallHandleFn wrenMakeCallHandle;
-            public wrenCallFn wrenCall;
-            public wrenReleaseHandleFn wrenReleaseHandle;
-            public wrenGetSlotCountFn wrenGetSlotCount;
-            public wrenEnsureSlotsFn wrenEnsureSlots;
-            public wrenGetSlotTypeFn wrenGetSlotType;
-            public wrenGetSlotBoolFn wrenGetSlotBool;
-            public wrenGetSlotBytesFn wrenGetSlotBytes;
-            public wrenGetSlotDoubleFn wrenGetSlotDouble;
-            public wrenGetSlotForeignFn wrenGetSlotForeign;
-            public wrenGetSlotStringFn wrenGetSlotString;
-            public wrenGetSlotHandleFn wrenGetSlotHandle;
-            public wrenSetSlotBoolFn wrenSetSlotBool;
-            public wrenSetSlotBytesFn wrenSetSlotBytes;
-            public wrenSetSlotDoubleFn wrenSetSlotDouble;
-            public wrenSetSlotNewForeignFn wrenSetSlotNewForeign;
-            public wrenSetSlotNewListFn wrenSetSlotNewList;
-            public wrenSetSlotNewMapFn wrenSetSlotNewMap;
-            public wrenSetSlotNullFn wrenSetSlotNull;
-            public wrenSetSlotStringFn wrenSetSlotString;
-            public wrenSetSlotHandleFn wrenSetSlotHandle;
-            public wrenGetListCountFn wrenGetListCount;
-            public wrenGetListElementFn wrenGetListElement;
-            public wrenSetListElementFn wrenSetListElement;
-            public wrenInsertInListFn wrenInsertInList;
-            public wrenGetMapCountFn wrenGetMapCount;
-            public wrenGetMapContainsKeyFn wrenGetMapContainsKey;
-            public wrenGetMapValueFn wrenGetMapValue;
-            public wrenSetMapValueFn wrenSetMapValue;
-            public wrenRemoveMapValueFn wrenRemoveMapValue;
-            public wrenGetVariableFn wrenGetVariable;
-            public wrenHasVariableFn wrenHasVariable;
-            public wrenHasModuleFn wrenHasModule;
-            public wrenAbortFiberFn wrenAbortFiber;
-            public wrenGetUserDataFn wrenGetUserData;
-            public wrenSetUserDataFn wrenSetUserData;
+            public IntPtr wrenInitConfiguration;
+            public IntPtr wrenNewVM;
+            public IntPtr wrenFreeVM;
+            public IntPtr wrenCollectGarbage;
+            public IntPtr wrenInterpret;
+            public IntPtr wrenMakeCallHandle;
+            public IntPtr wrenCall;
+            public IntPtr wrenReleaseHandle;
+            public IntPtr wrenGetSlotCount;
+            public IntPtr wrenEnsureSlots;
+            public IntPtr wrenGetSlotType;
+            public IntPtr wrenGetSlotBool;
+            public IntPtr wrenGetSlotBytes;
+            public IntPtr wrenGetSlotDouble;
+            public IntPtr wrenGetSlotForeign;
+            public IntPtr wrenGetSlotString;
+            public IntPtr wrenGetSlotHandle;
+            public IntPtr wrenSetSlotBool;
+            public IntPtr wrenSetSlotBytes;
+            public IntPtr wrenSetSlotDouble;
+            public IntPtr wrenSetSlotNewForeign;
+            public IntPtr wrenSetSlotNewList;
+            public IntPtr wrenSetSlotNewMap;
+            public IntPtr wrenSetSlotNull;
+            public IntPtr wrenSetSlotString;
+            public IntPtr wrenSetSlotHandle;
+            public IntPtr wrenGetListCount;
+            public IntPtr wrenGetListElement;
+            public IntPtr wrenSetListElement;
+            public IntPtr wrenInsertInList;
+            public IntPtr wrenGetMapCount;
+            public IntPtr wrenGetMapContainsKey;
+            public IntPtr wrenGetMapValue;
+            public IntPtr wrenSetMapValue;
+            public IntPtr wrenRemoveMapValue;
+            public IntPtr wrenGetVariable;
+            public IntPtr wrenHasVariable;
+            public IntPtr wrenHasModule;
+            public IntPtr wrenAbortFiber;
+            public IntPtr wrenGetUserData;
+            public IntPtr wrenSetUserData;
         }
 
         public static unsafe void Initialize(IntPtr ptr)
         {
             ref var funcs = ref Unsafe.AsRef<WrenFunctions>(ptr.ToPointer());
 
-            // funcs is living on the stack - copy to ours static members
-            wrenInitConfiguration = funcs.wrenInitConfiguration;
-            wrenNewVM = funcs.wrenNewVM;
-            wrenInterpretPtr = funcs.wrenInterpret;
-            wrenMakeCallHandlePtr = funcs.wrenMakeCallHandle;
-            wrenCall = funcs.wrenCall;
-            wrenReleaseHandle = funcs.wrenReleaseHandle;
-            wrenGetSlotCount = funcs.wrenGetSlotCount;
-            wrenEnsureSlots = funcs.wrenEnsureSlots;
-            wrenGetSlotType = funcs.wrenGetSlotType;
-            wrenGetSlotBool = funcs.wrenGetSlotBool;
-            wrenGetSlotBytesPtr = funcs.wrenGetSlotBytes;
-            wrenGetSlotDouble = funcs.wrenGetSlotDouble;
-            wrenGetSlotForeign = funcs.wrenGetSlotForeign;
-            wrenGetSlotStringPtr = funcs.wrenGetSlotString;
-            wrenGetSlotHandle = funcs.wrenGetSlotHandle;
-            wrenSetSlotBool = funcs.wrenSetSlotBool;
-            wrenSetSlotBytesPtr = funcs.wrenSetSlotBytes;
-            wrenSetSlotDouble = funcs.wrenSetSlotDouble;
-            wrenSetSlotNewForeign = funcs.wrenSetSlotNewForeign;
-            wrenSetSlotNewList = funcs.wrenSetSlotNewList;
-            wrenSetSlotNewMap = funcs.wrenSetSlotNewMap;
-            wrenSetSlotNull = funcs.wrenSetSlotNull;
-            wrenSetSlotStringPtr = funcs.wrenSetSlotString;
-            wrenSetSlotHandle = funcs.wrenSetSlotHandle;
-            wrenGetListCount = funcs.wrenGetListCount;
-            wrenGetListElement = funcs.wrenGetListElement;
-            wrenSetListElement = funcs.wrenSetListElement;
-            wrenInsertInList = funcs.wrenInsertInList;
-            wrenGetMapCount = funcs.wrenGetMapCount;
-            wrenGetMapContainsKey = funcs.wrenGetMapContainsKey;
-            wrenGetMapValue = funcs.wrenGetMapValue;
-            wrenSetMapValue = funcs.wrenSetMapValue;
-            wrenRemoveMapValue = funcs.wrenRemoveMapValue;
-            wrenGetVariablePtr = funcs.wrenGetVariable;
-            wrenHasVariablePtr = funcs.wrenHasVariable;
-            wrenHasModulePtr = funcs.wrenHasModule;
-            wrenAbortFiber = funcs.wrenAbortFiber;
-            wrenGetUserData = funcs.wrenGetUserData;
-            wrenSetUserData = funcs.wrenSetUserData;
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenInitConfiguration), funcs.wrenInitConfiguration, out wrenInitConfiguration);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenNewVM), funcs.wrenNewVM, out wrenNewVM);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenInterpret), funcs.wrenInterpret, out wrenInterpretPtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenMakeCallHandle), funcs.wrenMakeCallHandle, out wrenMakeCallHandlePtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenCall), funcs.wrenCall, out wrenCall);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenReleaseHandle), funcs.wrenReleaseHandle, out wrenReleaseHandle);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotCount), funcs.wrenGetSlotCount, out wrenGetSlotCount);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenEnsureSlots), funcs.wrenEnsureSlots, out wrenEnsureSlots);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotType), funcs.wrenGetSlotType, out wrenGetSlotType);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotBool), funcs.wrenGetSlotBool, out wrenGetSlotBool);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotBytes), funcs.wrenGetSlotBytes, out wrenGetSlotBytesPtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotDouble), funcs.wrenGetSlotDouble, out wrenGetSlotDouble);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotForeign), funcs.wrenGetSlotForeign, out wrenGetSlotForeign);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotString), funcs.wrenGetSlotString, out wrenGetSlotStringPtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetSlotHandle), funcs.wrenGetSlotHandle, out wrenGetSlotHandle);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotBool), funcs.wrenSetSlotBool, out wrenSetSlotBool);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotBytes), funcs.wrenSetSlotBytes, out wrenSetSlotBytesPtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotDouble), funcs.wrenSetSlotDouble, out wrenSetSlotDouble);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotNewForeign), funcs.wrenSetSlotNewForeign, out wrenSetSlotNewForeign);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotNewList), funcs.wrenSetSlotNewList, out wrenSetSlotNewList);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotNewMap), funcs.wrenSetSlotNewMap, out wrenSetSlotNewMap);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotNull), funcs.wrenSetSlotNull, out wrenSetSlotNull);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotString), funcs.wrenSetSlotString, out wrenSetSlotStringPtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetSlotHandle), funcs.wrenSetSlotHandle, out wrenSetSlotHandle);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetListCount), funcs.wrenGetListCount, out wrenGetListCount);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetListElement), funcs.wrenGetListElement, out wrenGetListElement);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetListElement), funcs.wrenSetListElement, out wrenSetListElement);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenInsertInList), funcs.wrenInsertInList, out wrenInsertInList);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetMapCount), funcs.wrenGetMapCount, out wrenGetMapCount);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetMapContainsKey), funcs.wrenGetMapContainsKey, out wrenGetMapContainsKey);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetMapValue), funcs.wrenGetMapValue, out wrenGetMapValue);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetMapValue), funcs.wrenSetMapValue, out wrenSetMapValue);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenRemoveMapValue), funcs.wrenRemoveMapValue, out wrenRemoveMapValue);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetVariable), funcs.wrenGetVariable, out wrenGetVariablePtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenHasVariable), funcs.wrenHasVariable, out wrenHasVariablePtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenHasModule), funcs.wrenHasModule, out wrenHasModulePtr);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenAbortFiber), funcs.wrenAbortFiber, out wrenAbortFiber);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenGetUserData), funcs.wrenGetUserData, out wrenGetUserData);
+            FunctionUtils.ResolveFuntionDelegate(nameof(wrenSetUserData), funcs.wrenSetUserData, out wrenSetUserData);
         }
 
         /// <summary>

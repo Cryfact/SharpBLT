@@ -21,6 +21,14 @@ public static class FunctionUtils
         return new Hook<TDelegate>(addr, del);
     }
 
+    public static void ResolveFuntionDelegate<TDelegate>(string fieldName, IntPtr ptr, out TDelegate del) where TDelegate : Delegate
+    {
+        del = Marshal.GetDelegateForFunctionPointer<TDelegate>(ptr);
+
+        if (del == null)
+            throw new Exception($"Failed to resolve Method '{fieldName}' -> Ptr: {ptr:X8}");
+    }
+
     public static TDelegate ResolveFunction<TDelegate>(string fieldName) where TDelegate : Delegate
     {
         FunctionPatternAttribute attr = typeof(TDelegate).GetCustomAttribute<FunctionPatternAttribute>() ?? throw new Exception($"No Function Pattern");
