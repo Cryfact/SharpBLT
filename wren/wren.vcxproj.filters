@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="optional">
+      <UniqueIdentifier>{CB60FAAF-B72D-55BB-E046-4363CC728A49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vm">
+      <UniqueIdentifier>{E8795900-D405-880B-3DB4-880B295F880B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="wren\src\include\wren.h" />
+    <ClInclude Include="wren\src\optional\wren_opt_meta.h" />
+    <ClInclude Include="wren\src\optional\wren_opt_random.h" />
+    <ClInclude Include="wren\src\vm\wren_common.h" />
+    <ClInclude Include="wren\src\vm\wren_compiler.h" />
+    <ClInclude Include="wren\src\vm\wren_core.h" />
+    <ClInclude Include="wren\src\vm\wren_debug.h" />
+    <ClInclude Include="wren\src\vm\wren_opcodes.h" />
+    <ClInclude Include="wren\src\vm\wren_primitive.h" />
+    <ClInclude Include="wren\src\vm\wren_utils.h" />
+    <ClInclude Include="wren\src\vm\wren_value.h" />
+    <ClInclude Include="wren\src\vm\wren_vm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="wren\src\optional\wren_opt_meta.c" />
+    <ClCompile Include="wren\src\optional\wren_opt_random.c" />
+    <ClCompile Include="wren\src\vm\wren_compiler.c" />
+    <ClCompile Include="wren\src\vm\wren_core.c" />
+    <ClCompile Include="wren\src\vm\wren_debug.c" />
+    <ClCompile Include="wren\src\vm\wren_primitive.c" />
+    <ClCompile Include="wren\src\vm\wren_utils.c" />
+    <ClCompile Include="wren\src\vm\wren_value.c" />
+    <ClCompile Include="wren\src\vm\wren_vm.c" />
+  </ItemGroup>
+</Project>
