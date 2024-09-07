@@ -42,11 +42,11 @@ public sealed class Lua
 
     [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 10 48 8B CA 48 C1 F9 2F 83 F9 F2 ?? ?? F2 0F 10 00 F2 48 0F")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate long lua_tointeger_fn(IntPtr luaState, int arg0);
+    public delegate long? lua_tointeger_fn(IntPtr luaState, int arg0);
 
     [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 10 48 8B CA 48 C1 F9 2F 83 F9 F2 ?? ?? F2 0F 10 00 48 83 C4")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate double lua_tonumber_fn(IntPtr luaState, int arg0);
+    public delegate double? lua_tonumber_fn(IntPtr luaState, int arg0);
 
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 49 8B F8 8B DA 48 8B F1")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -372,18 +372,24 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe static string lua_tolstring(IntPtr L, int arg0, out int size)
+    public unsafe static string? lua_tolstring(IntPtr L, int arg0, out int size)
     {
         IntPtr ptr = lua_tolstring_ptr(L, arg0, out IntPtr len);
-        string str = new((sbyte*)ptr);
-
-        size = len.ToInt32();
-
+        string? str = null;
+        try
+        {
+            str = new((sbyte*)ptr);
+            size = len.ToInt32();
+        }
+        catch
+        {
+            size = 0;
+        }
         return str;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe static string lua_tostring(IntPtr L, int arg0) => lua_tolstring(L, arg0, out _);
+    public static string lua_tostring(IntPtr L, int arg0) => lua_tolstring(L, arg0, out _) ?? string.Empty;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool lua_isfunction(IntPtr L, int arg0) => lua_type(L, arg0) == LUA_TFUNCTION;
@@ -533,7 +539,7 @@ public sealed class Lua
         int result = lua_pcall(L, args, returns, errorhandler);
         if (result != 0)
         {
-            string message = lua_tostring(L, -1);
+            string? message = lua_tostring(L, -1);
 
             if (message != null)
             {

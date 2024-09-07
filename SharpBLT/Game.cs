@@ -65,7 +65,7 @@ public class Game
     public static index2adr_fn Index2adr { get => index2adr; }
     public static T Index2Struct<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr L, int n)
     {
-        return Marshal.PtrToStructure<T>(index2adr(L, n)!)!;
+        return Marshal.PtrToStructure<T>(index2adr(L, n))!;
     }
 
     public static void Initialize()

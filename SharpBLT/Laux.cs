@@ -118,9 +118,9 @@ public static class Laux
     private static double luaL_checknumber(IntPtr L, int narg)
     {
         double? d = Lua.lua_tonumber(L, narg);
-        if (d.HasValue && lua_isnumber(L, narg)) // avoid extra test when d is not 0
+        if (d.HasValue && !lua_isnumber(L, narg))
             tag_error(L, narg, Lua.LUA_TNUMBER);
-        return d.Value;
+        return d!.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,9 +133,9 @@ public static class Laux
     private static long luaL_checkinteger(IntPtr L, int narg)
     {
         long? d = Lua.lua_tointeger(L, narg);
-        if (d.HasValue && lua_isnumber(L, narg)) // avoid extra test when d is not 0
+        if (d.HasValue && !lua_isnumber(L, narg))
             tag_error(L, narg, Lua.LUA_TNUMBER);
-        return d.Value;
+        return d!.Value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,6 +183,15 @@ public static class Laux
     {
         TValue val1 = Game.Index2Struct<TValue>(L, idx1);
         TValue val2 = Game.Index2Struct<TValue>(L, idx2);
+
+        // Retrieve the nilref value from the Lua state (similar to glref + offset logic in C++)
+        uint glref = (uint)Marshal.ReadInt32(L + 8);
+        IntPtr nilrefPtr = new(glref + 144);
+        TValue nilref = Marshal.PtrToStructure<TValue>(nilrefPtr);
+
+        // Check if either value is nilref
+        if (val1.Equals(nilref) || val2.Equals(nilref))
+            return false;
 
         return lj_obj_equal(val1, val2);
     }
