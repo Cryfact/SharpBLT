@@ -94,7 +94,7 @@ public static class Laux
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string luaL_checklstring(IntPtr L, int narg, out int len)
+    private static string luaL_checklstring(IntPtr L, int narg, out long len)
     {
         string? s = Lua.lua_tolstring(L, narg, out len);
         if (s == null)
@@ -103,7 +103,7 @@ public static class Laux
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string luaL_optlstring(IntPtr L, int narg, string def, out int len)
+    private static string luaL_optlstring(IntPtr L, int narg, string def, out long len)
     {
         if (Lua.lua_isnoneornil(L, narg))
         {

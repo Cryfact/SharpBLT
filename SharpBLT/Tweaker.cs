@@ -21,9 +21,6 @@ public static class Tweaker
     // Method to tweak Raid XML files. Takes the XML as a string and processes it.
     public static IntPtr TweakRaidXml(IntPtr textPtr, int textLength, out int newLen)
     {
-        //throw new NotImplementedException();
-        // TODO: implement Raid.LastLoadedName, Raid.LastLoadedExt, then uncomment !
-
         if (!TweakerEnabled)
         {
             newLen = textLength;
