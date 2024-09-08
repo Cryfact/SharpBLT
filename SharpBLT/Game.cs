@@ -37,6 +37,9 @@ public class Game
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate void do_xmlload_invoke_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);
 
+    // TODO?
+    //CREATE_NORMAL_CALLABLE_SIGNATURE(Archive_ctor_datastore_thing, int64_t, "\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x30\x48\x8D\x2D", "xxxxxxxxxxxxxxxxxxxxxxx", 0)
+
 #pragma warning disable CS8618
     private static application_update_fn application_update;
     private static try_open_property_match_resolver_fn try_open_property_match_resolver;
