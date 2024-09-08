@@ -27,6 +27,11 @@ public class Game
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate IntPtr index2adr_fn(IntPtr luaState, int arg0);
 
+    // TODO?
+    [FunctionPattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 30 48 8D 2D")]
+    [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
+    public delegate long Archive_ctor_datastore_thing_fn();
+
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 20 57 48 83 EC 50")]
     public delegate void node_from_xml_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);
@@ -36,9 +41,6 @@ public class Game
 
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate void do_xmlload_invoke_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);
-
-    // TODO?
-    //CREATE_NORMAL_CALLABLE_SIGNATURE(Archive_ctor_datastore_thing, int64_t, "\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x30\x48\x8D\x2D", "xxxxxxxxxxxxxxxxxxxxxxx", 0)
 
 #pragma warning disable CS8618
     private static application_update_fn application_update;
