@@ -30,7 +30,7 @@ public static class Tweaker
         // Convert IntPtr to string
         string text = Marshal.PtrToStringAnsi(textPtr, textLength);
 
-        IdFile file = new IdFile(Game.LastLoadedName, Game.LastLoadedExt);
+        IdFile file = new(Game.LastLoadedName, Game.LastLoadedExt);
 
         // Check if this is the same file being parsed again.
         if (lastParsed == file)
