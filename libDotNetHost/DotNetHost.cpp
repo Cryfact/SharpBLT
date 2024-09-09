@@ -30,11 +30,11 @@ void LoadDotNetRuntime(void* param)
 #ifdef __USING_NATIVE_AOT__
     using EntryPointFn = void(*)(void*); 
 
-    HMODULE hModule = LoadLibraryA("mods\\base\\SharpBLT.dll");
+    HMODULE hModule = LoadLibraryA("SharpBLT.dll");
 
     if (hModule == nullptr)
     {
-        MessageBoxA(nullptr, "mods\\base\\SharpBLT.dll not found", "file not found", MB_OK);
+        MessageBoxA(nullptr, "SharpBLT.dll not found", "file not found", MB_OK);
         return;
     }
 
@@ -42,7 +42,7 @@ void LoadDotNetRuntime(void* param)
 
     if (entrypoint == nullptr)
     {
-        MessageBoxA(nullptr, "NativeMain in mods\\base\\SharpBLT.dll not found", "Entrypoint not found", MB_OK);
+        MessageBoxA(nullptr, "NativeMain in SharpBLT.dll not found", "Entrypoint not found", MB_OK);
         return;
     }
 
@@ -78,7 +78,7 @@ void LoadDotNetRuntime(void* param)
 
     hostfxr_handle context;
 
-    string configPath = runtimePath + __TEXT("\\mods\\base\\NETHostFxr.runtimeconfig.json");
+    string configPath = runtimePath + __TEXT("\\NETHostFxr.runtimeconfig.json");
 
     rc = init_fptr(configPath.c_str(), nullptr, &context);
 
@@ -92,7 +92,7 @@ void LoadDotNetRuntime(void* param)
     typedef void (CORECLR_DELEGATE_CALLTYPE* custom_entry_point_fn)(void);
     custom_entry_point_fn entryPoint = nullptr;
 
-    string libPath = runtimePath + __TEXT("\\mods\\base\\SharpBLT.dll");
+    string libPath = runtimePath + __TEXT("\\SharpBLT.dll");
 
     rc = load_assembly_and_get_function_pointer(libPath.c_str(), __TEXT("SharpBLT.Program, SharpBLT"), __TEXT("Main"),
         UNMANAGEDCALLERSONLY_METHOD, nullptr, reinterpret_cast<void**>(&entryPoint));
