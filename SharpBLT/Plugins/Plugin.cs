@@ -57,11 +57,11 @@ public abstract class Plugin(string file)
 
         CheckLicenseCompliance();
 
-        _setupStateFunc = ResolveSymbol("SuperBLT_Plugin_Init_State");
+        _setupStateFunc = ResolveSymbol("SharpBLT_Plugin_Init_State");
         if (_setupStateFunc == IntPtr.Zero) throw new Exception("Invalid dlhandle - missing setup_state func!");
 
-        _updateFunc = ResolveSymbol("SuperBLT_Plugin_Update");
-        _pushLuaFunc = ResolveSymbol("SuperBLT_Plugin_PushLua");
+        _updateFunc = ResolveSymbol("SharpBLT_Plugin_Update");
+        _pushLuaFunc = ResolveSymbol("SharpBLT_Plugin_PushLua");
     }
 
     private void CheckLicenseCompliance()
