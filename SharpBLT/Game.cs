@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 
 public class Game
 {
-    private static byte[] do_xmlload_invoke_bytes = [
+    private static readonly byte[] do_xmlload_invoke_bytes = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFX
             0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
         ];
 
-    private static byte[] node_from_xml_new_bytes = [
+    private static readonly byte[] node_from_xml_new_bytes = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFXNF
             0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
         ];
