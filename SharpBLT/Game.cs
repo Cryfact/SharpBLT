@@ -27,6 +27,11 @@ public class Game
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate IntPtr index2adr_fn(IntPtr luaState, int arg0);
 
+    // TODO?
+    [FunctionPattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 30 48 8D 2D")]
+    [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
+    public delegate long Archive_ctor_datastore_thing_fn();
+
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 20 57 48 83 EC 50")]
     public delegate void node_from_xml_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);

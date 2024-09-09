@@ -42,15 +42,15 @@ public sealed class Lua
 
     [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 10 48 8B CA 48 C1 F9 2F 83 F9 F2 ?? ?? F2 0F 10 00 F2 48 0F")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate long? lua_tointeger_fn(IntPtr luaState, int arg0);
+    public delegate long? lua_tointeger_fn(IntPtr luaState, int arg0); // FIXME? types?
 
     [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 10 48 8B CA 48 C1 F9 2F 83 F9 F2 ?? ?? F2 0F 10 00 48 83 C4")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate double? lua_tonumber_fn(IntPtr luaState, int arg0);
+    public delegate double? lua_tonumber_fn(IntPtr luaState, int arg0); // FIXME? types?
 
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 49 8B F8 8B DA 48 8B F1")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate IntPtr lua_tolstring_fn(IntPtr luaState, int arg0, out IntPtr arg1);
+    public delegate IntPtr lua_tolstring_fn(IntPtr luaState, int arg0, out IntPtr arg1); // FIXME? types?
 
     [FunctionPattern("40 53 48 83 EC 20 4C 8B D9 E8 ?? ?? ?? ?? 48 8B")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -62,11 +62,16 @@ public sealed class Lua
 
     [FunctionPattern("48 89 5C 24 20 55 56 57 48 81 EC 50 02 00 00 48")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int luaL_loadfilex_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1);
+    public delegate int luaL_loadfilex_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1); // FIXME? types?
 
     [FunctionPattern("48 83 EC 48 48 89 54 24 30 48 83 C8 FF 0F 1F 00")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int luaL_loadstring_fn(IntPtr luaState, IntPtr arg0);
+
+    // TODO
+    [FunctionPattern("4C 8B DC 53 56 57 48 81 EC E0 00 00 00")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int lua_loadx_fn(IntPtr luaState, IntPtr luaReader, IntPtr arg1, IntPtr arg2, IntPtr arg3);
 
     [FunctionPattern("48 89 5C 24 10 57 48 83 EC 20 4D 8B D8 48 8B D9")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -74,11 +79,16 @@ public sealed class Lua
 
     [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 4D 8B D8 48 8B D9")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int lua_setfield_fn(IntPtr luaState, int arg0, IntPtr arg1);
+    public delegate void lua_setfield_fn(IntPtr luaState, int arg0, IntPtr arg1);
 
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4C 8B 49 10 41 8B F8 8B F2 48 8B D9 49 8B 41 28 49")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_createtable_fn(IntPtr luaState, int arg0, int arg1);
+
+    // TODO
+    [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 4C 8B 41 10 48 8B FA")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate IntPtr lua_newuserdata_fn(IntPtr luaState, long arg0); // FIXME int/long? size_t?
 
     [FunctionPattern("4C 8B C9 85 D2 7E ?? 8D 42 FF 48 63 D0 48 8B 41")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -94,19 +104,39 @@ public sealed class Lua
 
     [FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B F2 48 8B E9 48 8B CE 41 B9 70")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_newstate_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1);
+    public delegate IntPtr lua_newstate_fn(IntPtr luaAlloc, IntPtr arg0); // FIXME? types?
 
     [FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B 79 10 48 8B B7 C8 00 00 00 48")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_close_fn(IntPtr luaState);
 
+    // TODO
+    [FunctionPattern("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 43 28 48 8B D0 49 83 E8 08")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_gettable_fn(IntPtr luaState, int arg0);
+
     [FunctionPattern("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 43 28 48 8B D0 49 83 E8 10")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_settable_fn(IntPtr luaState, int arg0);
 
+    // TODO
+    [FunctionPattern("48 83 EC 28 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 53 28 4C 8B C8")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int lua_setmetatable_fn(IntPtr luaState, int arg0);
+
+    // TODO
+    [FunctionPattern("48 83 EC 28 4C 8B D9 E8 ?? ?? ?? ?? 48 8B 08 48 8B C1 48 C1 F8 2F 83 F8 F4")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int lua_getmetatable_fn(IntPtr luaState, int arg0);
+
+    // TODO
+    [FunctionPattern("48 8B 41 28 F2 0F 11 08")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_pushnumber_fn(IntPtr luaState, double arg0); // FIXME double? lua_Number?
+
     [FunctionPattern("48 8B 41 28 0F 57 C0 F2 48 0F 2A C2 F2 0F 11 00")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushinteger_fn(IntPtr luaState, long arg0);
+    public delegate void lua_pushinteger_fn(IntPtr luaState, long arg0); // FIXME int/long? size_t?
 
     [FunctionPattern("48 8B 41 28 45 33 C0 85 D2 41 0F 95 C0 49 FF C0")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -118,11 +148,16 @@ public sealed class Lua
 
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4C 8B 49 10 49 8B F8 48 8B F2 48 8B D9 49 8B 41 28")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushlstring_fn(IntPtr luaState, IntPtr arg0, int arg1);
+    public delegate void lua_pushlstring_fn(IntPtr luaState, IntPtr arg0, long arg1); // FIXME int/long? size_t?
 
     [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 48 8B FA 48 8B D9 48 85 D2 75 ?? 48 8B 41 28 49 83 C8 FF 4C 89 00")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_pushstring_fn(IntPtr luaState, IntPtr arg0);
+
+    // TODO
+    [FunctionPattern("48 89 54 24 10 4C 89 44 24 18 4C 89 4C 24 20 53 48 83 EC 20 4C 8B 41 10")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate IntPtr lua_pushfstring_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1);
 
     [FunctionPattern("40 53 48 83 EC 20 48 8B D9 81 FA 40 1F 00 00 7F")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -144,6 +179,16 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int luaL_ref_fn(IntPtr luaState, int arg0);
 
+    // TODO
+    [FunctionPattern("40 53 48 83 EC 20 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 5B 28")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_rawget_fn(IntPtr luaState, int arg0);
+
+    // TODO
+    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 48 8B 73 28")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_rawset_fn(IntPtr luaState, int arg0);
+
     [FunctionPattern("40 53 48 83 EC 20 4D 63 D8 48 8B D9 E8 ?? ?? ?? ?? 48 BA FF FF FF FF FF")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_rawgeti_fn(IntPtr luaState, int arg0, int arg1);
@@ -163,6 +208,21 @@ public sealed class Lua
     [FunctionPattern("45 85 C0 0F 88 ?? ?? ?? ?? 48 89 5C 24 08 48 89")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void luaL_unref_fn(IntPtr luaState, int arg0, int arg1);
+
+    // TODO
+    [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 45 8B D8 48 8B D9 E8 ?? ?? ?? ?? 41 8B D3 48 8B CB 48 8B F8 E8 ?? ?? ?? ?? 4C 8B 17")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int lua_equal_fn(IntPtr luaState, int arg0, int arg1);
+
+    // TODO
+    [FunctionPattern("48 89 5C 24 10 48 89 74 24 18 41 56 48 83 EC 20 48 8B 41 10")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int luaL_newmetatable_fn(IntPtr luaState, IntPtr arg0);
+
+    // TODO
+    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4D 8B D8")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate int luaL_checkudata_fn(IntPtr luaState, int arg0, IntPtr arg1);
 
     [FunctionPattern("48 89 54 24 10 4C 89 44 24 18 4C 89 4C 24 20 53 48 83 EC 20 4C 8D 44 24 40")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -372,7 +432,7 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe static string? lua_tolstring(IntPtr L, int arg0, out int size)
+    public unsafe static string? lua_tolstring(IntPtr L, int arg0, out long size)
     {
         IntPtr ptr = lua_tolstring_ptr(L, arg0, out IntPtr len);
         string? str = null;
@@ -424,7 +484,7 @@ public sealed class Lua
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void lua_pushlstring(IntPtr L, string arg0, int length)
+    public static void lua_pushlstring(IntPtr L, string arg0, long length)
     {
         IntPtr ptr = Marshal.StringToHGlobalAnsi(arg0);
         lua_pushlstring_ptr(L, ptr, length);
@@ -483,10 +543,10 @@ public sealed class Lua
         return result;
     }
 
-    public static int luaL_loadfilex(IntPtr luaState, string filename)
+    public static int luaL_loadfilex(IntPtr L, string filename)
     {
         IntPtr ptrName = Marshal.StringToHGlobalAnsi(filename);
-        int err = luaL_loadfilex_ptr(luaState, ptrName, 0);
+        int err = luaL_loadfilex_ptr(L, ptrName, 0);
         Marshal.FreeHGlobal(ptrName);
         return err;
     }
@@ -576,7 +636,7 @@ public sealed class Lua
         return ret;
     }
 
-    internal static bool check_active_state(IntPtr L) => ms_activeStates.Select(it => it == L).Any();
+    internal static bool check_active_state(IntPtr L) => ms_activeStates.Select(it => it.Equals(L)).Any();
 
     private static void add_active_state(IntPtr L)
     {
