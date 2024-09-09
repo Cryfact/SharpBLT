@@ -3,12 +3,12 @@
 using System;
 using System.Runtime.CompilerServices;
 
-public class IdFile : IComparable<IdFile>
+public struct IdFile : IComparable<IdFile>
 {
     public readonly IdString IDSTRING_NONE = new(0);
 
-    public IdString Name { get; set; }
-    public IdString Ext { get; set; }
+    public IdString Name;
+    public IdString Ext;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IdFile()
@@ -29,7 +29,7 @@ public class IdFile : IComparable<IdFile>
     {
         if (obj is IdFile other)
         {
-            return other?.Name == Name && other.Ext == Ext;
+            return other.Name == Name && other.Ext == Ext;
         }
         return false;
     }
@@ -41,7 +41,7 @@ public class IdFile : IComparable<IdFile>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int CompareTo(IdFile? other)
+    public int CompareTo(IdFile other)
     {
         if (Name != other!.Name)
         {
