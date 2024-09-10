@@ -3,53 +3,74 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SharpBLT
 {
     internal class DieselDB : Singleton<DieselDB>
     {
+		private static ulong monotonicTimeMicros()
+		{
+            // https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
+            long StartingTime;
+            long Frequency;
+
+            Kernel32.QueryPerformanceFrequency(out Frequency);
+            Kernel32.QueryPerformanceCounter(out StartingTime);
+
+            StartingTime *= 1000000;
+            StartingTime /= Frequency;
+            return (ulong)StartingTime;
+        }
+
         private List<DslFile> filesList;
         private Dictionary<KeyValuePair<IdString, IdString>, DslFile> files;
 
+        // "Future" proofing.
+        private List<string> blb_names = ["all", "bundle_db"];
+
         public DieselDB()
         {
-            /*
-             uint64_t start_time = monotonicTimeMicros();
-	PD2HOOK_LOG_LOG("Start loading DB info");
+            ulong start_time = monotonicTimeMicros();
+			Logger.Instance().Log(LogType.Log, "Start loading DB info");
 
-	std::ifstream in;
-	in.exceptions(std::ios::failbit | std::ios::badbit);
+            string blb_suffix = ".blb";
+            string? blb_path = null;
 
-	// "Future" proofing.
-	std::string blb_names[2] = {
-		"all",
-		"bundle_db"
-	};
+			foreach (string name in Utils.GetDirectoryContents("assets"))
+			{
+                if (name.Length <= blb_suffix.Length)
+                    continue;
 
-	std::string blb_suffix = ".blb";
-	std::string blb_path;
+				var fileInfo = new FileInfo(name);
 
-	for (const std::string& name : pd2hook::Util::GetDirectoryContents("assets"))
-	{
-		if (name.length() <= blb_suffix.size())
-			continue;
-		if (name.compare(name.size() - blb_suffix.size(), blb_suffix.size(), blb_suffix) != 0)
-			continue;
+                if (fileInfo.Extension != blb_suffix)
+                    continue;
 
-		bool valid_name = false;
-		for (const std::string& blb_name : blb_names) {
-			if (name.compare(0, blb_name.size(), blb_name) == 0) {
-				valid_name = true;
-				break;
+                bool valid_name = false;
+
+                foreach (string blb_name in blb_names) 
+				{
+                    if (name.Substring(0, blb_name.Length) == blb_name)
+                    {
+                        valid_name = true;
+                        break;
+                    }
+                }
+
+                if (!valid_name)
+                    continue;
+
+                blb_path = name;
+            }
+
+			if (string.IsNullOrEmpty(blb_path))
+			{
+				Logger.Instance().Log(LogType.Error, "");
 			}
-		}
 
-		if (!valid_name)
-			continue;
-
-		blb_path = name;
-	}
+            /*
 
 	if (blb_path.empty()) {
 		PD2HOOK_LOG_ERROR("No 'all.blb' or 'bundle_db.blb' found in 'assets' folder, not loading asset database!");

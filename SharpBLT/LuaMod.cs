@@ -579,12 +579,7 @@ public class LuaMod
 
         try
         {
-            if (!files)
-                directories = Directory.GetFiles(dir, "*", SearchOption.TopDirectoryOnly);
-            else
-                directories = Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly);
-
-            directories = directories.Select((x) => x.Replace(dir, string.Empty)).ToArray();
+            directories = Utils.GetDirectoryContents(dir, files);
         }
         catch (Exception)
         {

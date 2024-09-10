@@ -113,6 +113,12 @@ internal static class Kernel32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool FreeLibrary(IntPtr hModule);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
+
+    [DllImport("kernel32.dll", SetLastError = false)]
+    public static extern bool QueryPerformanceFrequency(out long lpPerformanceFreq);
+
     public static T? GetProcAddress<T>(IntPtr hModule, string procName) where T : Delegate
     {
         Type type = typeof(T);
