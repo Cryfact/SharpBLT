@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpBLT
 {
-    internal class DieselBundle // maybe struct
+    public class DieselBundle
     {
 		public string path;
         public string headerPath;

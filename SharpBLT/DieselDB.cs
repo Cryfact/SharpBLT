@@ -1,38 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace SharpBLT
 {
     internal class DieselDB : Singleton<DieselDB>
     {
-		private static ulong monotonicTimeMicros()
-		{
-            // https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
-            long StartingTime;
-            long Frequency;
-
-            Kernel32.QueryPerformanceFrequency(out Frequency);
-            Kernel32.QueryPerformanceCounter(out StartingTime);
-
-            StartingTime *= 1000000;
-            StartingTime /= Frequency;
-            return (ulong)StartingTime;
-        }
-
-        private List<DslFile> filesList;
-        private Dictionary<KeyValuePair<IdString, IdString>, DslFile> files;
+        private readonly DslFile[] m_filesList;
+        private readonly Dictionary<KeyValuePair<IdString, IdString>, DslFile> m_files;
 
         // "Future" proofing.
-        private List<string> blb_names = ["all", "bundle_db"];
+        private static readonly List<string> ms_blb_names = ["all", "bundle_db"];
+#pragma warning disable CS0649
+        struct LanguageData
+		{
+			public IdString name;
+			public uint id;
+			public uint padding;
+		}
 
+#pragma warning disable IDE1006 // Benennungsstile
+        struct dsl_vector
+#pragma warning restore IDE1006 // Benennungsstile
+        {
+			public uint size;
+			public uint capacity;
+			public IntPtr contents_ptr;
+            public IntPtr alocator;
+		}
+
+        struct MiniFile
+        {
+            public IdString type;
+            public IdString name;
+            public uint langId;
+            public uint zero_1;
+            public uint fileId;
+            public uint zero_2;
+        }
+
+        struct FilePos
+        {
+            public uint fileId;
+            public uint offset;
+        }
+
+        struct BundleInfo
+        {
+            public IntPtr id;
+            public dsl_vector vec;
+            public IntPtr zero;
+            public IntPtr one;
+        };
+
+        struct ItemInfo
+        {
+            public uint fileId;
+            public uint offset;
+            public uint length;
+        };
+#pragma warning restore CS0649
         public DieselDB()
         {
-            ulong start_time = monotonicTimeMicros();
+            m_files = [];
+            m_filesList = [];
+
+            ulong start_time = MonotonicTimeMicros();
 			Logger.Instance().Log(LogType.Log, "Start loading DB info");
 
             string blb_suffix = ".blb";
@@ -50,9 +83,9 @@ namespace SharpBLT
 
                 bool valid_name = false;
 
-                foreach (string blb_name in blb_names) 
+                foreach (string blb_name in ms_blb_names) 
 				{
-                    if (name.Substring(0, blb_name.Length) == blb_name)
+                    if (name[..blb_name.Length] == blb_name)
                     {
                         valid_name = true;
                         break;
@@ -65,166 +98,217 @@ namespace SharpBLT
                 blb_path = name;
             }
 
-			if (string.IsNullOrEmpty(blb_path))
+            var fileName = "assets/" + blb_path;
+
+            if (string.IsNullOrEmpty(blb_path) || !File.Exists(fileName))
 			{
-				Logger.Instance().Log(LogType.Error, "");
+				Logger.Instance().Log(LogType.Error, "No 'all.blb' or 'bundle_db.blb' found in 'assets' folder, not loading asset database!");
+				return;
 			}
 
-            /*
+			var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-	if (blb_path.empty()) {
-		PD2HOOK_LOG_ERROR("No 'all.blb' or 'bundle_db.blb' found in 'assets' folder, not loading asset database!");
-		return;
-	}
+			fileStream.Seek(Unsafe.SizeOf<IntPtr>(), SeekOrigin.Current);
 
-	in.open("assets/" + blb_path, std::ios::binary);
+			var languages = new Dictionary<uint, IdString>();
 
-	// Skip a pointer - vtable or allocator probably?
-	in.seekg(sizeof(void*), std::ios::cur);
+			foreach (var lang in LoadVector<LanguageData>(fileStream, 0))
+                languages[lang.id] = lang.name;
 
-	// Build out the LanguageID-to-idstring mappings
-	struct LanguageData
-	{
-		idstring name;
-		uint32_t id;
-		uint32_t padding; // Probably padding, at least - always zero
-	};
-	static_assert(sizeof(LanguageData) == 16);
-	std::map<int, idstring> languages;
-	for (const LanguageData& lang : loadVector<LanguageData>(in, 0))
-	{
-		languages[lang.id] = lang.name;
-	}
 
-	// Sortmap
-	in.seekg(sizeof(void*) * 2, std::ios::cur);
-#if defined(GAME_RAID)
-	in.seekg(sizeof(void*), std::ios::cur);
-#endif
+            // Sortmap
 
-	// Files
-	struct MiniFile
-	{
-		idstring type;
-		idstring name;
-		uint32_t langId;
-		uint32_t zero_1;
-		uint32_t fileId;
-		uint32_t zero_2;
-	};
-	static_assert(sizeof(MiniFile) == 32); // Same on 32 and 64 bit
-	std::vector<MiniFile> miniFiles = loadVector<MiniFile>(in, 0);
-	filesList.resize(miniFiles.size());
+            fileStream.Seek(Unsafe.SizeOf<IntPtr>() * 3, SeekOrigin.Current); // * 2 for pay day, * 3 for raid
 
-	for (size_t i = 0; i < miniFiles.size(); i++)
-	{
-		MiniFile& mini = miniFiles[i];
-		//printf("File: %016llx.%016llx\n", mini.name, mini.type);
+			var miniFiles = LoadVector<MiniFile>(fileStream, 0);
+            m_filesList = new DslFile[miniFiles.Length];
 
-#if defined(GAME_PD2) || defined(GAME_RAID) //PDTH seemingly stores something here.
-		assert(mini.zero_1 == 0);
-		assert(mini.zero_2 == 0);
-#endif
+            foreach (var mini in miniFiles)
+			{
+                // Since the file IDs form a sequence of 1 upto the file count (though not in
+                // order), we can use those as indexes into our file list.
 
-		// Since the file IDs form a sequence of 1 upto the file count (though not in
-		// order), we can use those as indexes into our file list.
+                if (mini.fileId > m_filesList.Length)
+                    Array.Resize(ref m_filesList, (int)mini.fileId);
 
-		if (mini.fileId > filesList.size()) {
-			filesList.resize(mini.fileId);
-		}
+                var fi = m_filesList[mini.fileId - 1];
 
-		DslFile& fi = filesList.at(mini.fileId - 1);
+                fi.name = mini.name;
+                fi.type = mini.type;
+                fi.fileId = mini.fileId;
 
-		fi.name = mini.name;
-		fi.type = mini.type;
-		fi.fileId = mini.fileId;
+                // Look up the language idstring, if applicable
+                fi.rawLangId = mini.langId;
+                if (mini.langId == 0)
+                    fi.langId = IdString.Empty;
+                else if (languages.Any((x) => x.Key == mini.langId))
+                    fi.langId = languages[mini.langId];
+                else
+                    fi.langId = new IdString(0x11df684c9591b7e0); // 'unknown' - is in the hashlist, so you'll be able to find it
 
-		// Look up the language idstring, if applicable
-		fi.rawLangId = mini.langId;
-		if (mini.langId == 0)
-			fi.langId = 0;
-		else if (languages.count(mini.langId))
-			fi.langId = languages[mini.langId];
-		else
-			fi.langId = 0x11df684c9591b7e0; // 'unknown' - is in the hashlist, so you'll be able to find it
+                // If it's a repeated file, the language must be different
+                if (m_files.TryGetValue(fi.Key(), out var prev))
+                {
+                    fi.next = prev;
+                }
 
-		// If it's a repeated file, the language must be different
-		const auto& prev = files.find(fi.Key());
-		if (prev != files.end())
-		{
-			assert(prev->second->langId != fi.langId);
-			fi.next = prev->second;
-		}
+                m_files[fi.Key()] = fi;
+            }
 
-		files[fi.Key()] = &fi;
-	}
 
-	//printf("File count: %ld\n", files.size());
+            Logger.Instance().Log(LogType.Log, $"File count: {m_files.Count}\n");
 
-	// Load each of the bundle headers
-	std::string suffix = "_h.bundle";
-	std::string prefix = "all_";
-	for (const std::string& name : pd2hook::Util::GetDirectoryContents("assets"))
-	{
-		if (name.length() <= suffix.size())
-			continue;
-		if (name.compare(name.size() - suffix.size(), suffix.size(), suffix) != 0)
-			continue;
-		if (name == "all_h.bundle")
-			continue; // all_h handling later
-#if defined(GAME_PD2) // Some people might have leftover bundle modder fix related headers in PD2.
-		if (name.size() != 25)
-		{
-			PD2HOOK_LOG_WARN("Invalid bundle name '" + name + "' - ignoring");
-			continue;
-		}
-#endif
+            // Load each of the bundle headers
+            string suffix = "_h.bundle";
+            string prefix = "all_";
 
-		bool package = true;
-		if (name.compare(0, prefix.size(), prefix) == 0)
-			package = false;
+            foreach (var name in Utils.GetDirectoryContents("assets"))
+	        {
+                if (name.Length <= suffix.Length)
+                    continue;
+                if (name.Substring(name.Length - suffix.Length, suffix.Length).CompareTo(suffix) != 0)
+                    continue;
+                if (name == "all_h.bundle")
+                    continue; // all_h handling later
 
-		std::string headerPath = "assets/" + name;
+                bool package = true;
+                if (name.Substring(name.Length - suffix.Length, suffix.Length).CompareTo(prefix) == 0)
+                    package = false;
 
-		// Find the headerPath to the data file - chop out the '_h' bit
-		std::string dataPath = headerPath;
-		dataPath.erase(dataPath.end() - 9, dataPath.end() - 7);
+                string headerPath = "assets/" + name;
 
-		if (package)
-			loadPackageHeader(headerPath, dataPath, filesList);
-#if defined(GAME_RAID) || defined(GAME_PDTH)
-		else
-			loadBundleHeader(headerPath, dataPath, filesList);
-#endif
-	}
+                // Find the headerPath to the data file - chop out the '_h' bit
+                string dataPath = headerPath;
+                dataPath = dataPath.Remove(dataPath.Length - 9, dataPath.Length - 7);
 
-#if defined(GAME_PD2)
-	loadMultiBundleHeader("assets/all_h.bundle", filesList);
-#endif
+                if (package)
+                    LoadPackageHeader(headerPath, dataPath, m_filesList);
+		        else
+                    LoadBundleHeader(headerPath, dataPath, m_filesList);
 
-	// We're done loading, print out how long it took and how many files it's tracking (to estimate memory usage)
-	uint64_t end_time = monotonicTimeMicros();
+                var end_time = MonotonicTimeMicros();
 
-	char buff[1024];
-	memset(buff, 0, sizeof(buff));
-	snprintf(buff, sizeof(buff) - 1, "Finished loading DB info: %zd files in %d ms", filesList.size(),
-	         (int)(end_time - start_time) / 1000);
-	PD2HOOK_LOG_LOG(buff);       
-             */
+                Logger.Instance().Log(LogType.Log, $"Finished loading DB info: {m_filesList.Length} files in {(int)(end_time - start_time) / 1000} ms");
+            }
         }
 
         public DslFile? Find(IdString name, IdString ext)
         {
-            if (!files.TryGetValue(new KeyValuePair<IdString, IdString>(name, ext), out var res))
+            if (!m_files.TryGetValue(new KeyValuePair<IdString, IdString>(name, ext), out var res))
                 return null;
 
             return res;
         }
 
-        public BLTAbstractDataStore Open(DieselBundle bundle)
+        public static BLTAbstractDataStore Open(DieselBundle bundle)
         {
             var fds = BLTFileDataStore.Open(bundle.path);
             return fds;
+        }
+
+        private static void LoadBundleHeader(string headerPath, string dataPath, DslFile[] files)
+        {
+            var fileStream = new FileStream(headerPath, FileMode.Open, FileAccess.Read);
+
+            fileStream.Seek(4, SeekOrigin.Current);
+
+            var data = new byte[Unsafe.SizeOf<BundleInfo>()];
+            var bundle = Marshal.PtrToStructure<BundleInfo>(Marshal.UnsafeAddrOfPinnedArrayElement(data, 0));
+
+            var dieselBundle = new DieselBundle
+            {
+                headerPath = headerPath,
+                path = dataPath
+            };
+
+            foreach (var item in LoadVector<ItemInfo>(fileStream, 4, bundle.vec))
+            {
+                var fi = files[item.fileId - 1];
+
+                fi.bundle = dieselBundle;
+                fi.offset = item.offset;
+                fi.length = item.length;
+            }
+        }
+
+        private static void LoadPackageHeader(string headerPath, string dataPath, DslFile[] files)
+        {
+            var bundle = new DieselBundle
+            {
+                headerPath = headerPath,
+                path = dataPath
+            };
+
+            var fileStream = new FileStream(bundle.headerPath, FileMode.Open, FileAccess.Read);
+
+            fileStream.Seek(4, SeekOrigin.Current);
+
+            var positions = LoadVector<FilePos>(fileStream, 4);
+
+            DslFile? prev = null;
+
+            foreach (var pos in positions)
+            {
+                var fi = files[pos.fileId - 1];
+
+                fi.bundle = bundle;
+                fi.offset = pos.offset;
+
+                if (prev != null)
+                    prev.length = fi.offset - prev.offset;
+
+                prev = fi;
+            }
+
+            // TODO set a length for the last file
+            if (prev != null)
+                prev.length = (uint)(fileStream.Length - prev.offset); // maybe correct length of last file
+        }
+
+        private unsafe static T[] LoadVector<[DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>
+            (Stream stream, int offset, dsl_vector vec)
+        {
+            int elementSize = Unsafe.SizeOf<T>();
+            var data = new byte[vec.size * elementSize];
+            var result = new T[elementSize];
+
+            var pos = stream.Position;
+
+            stream.Seek(vec.contents_ptr + offset, SeekOrigin.Begin);
+            stream.Read(data);
+            stream.Seek(pos, SeekOrigin.Begin);
+
+            fixed (byte* p = data)
+            {
+                for (int i = 0; i < data.Length; i += elementSize)
+                    result[i] = Marshal.PtrToStructure<T>(new IntPtr(p + i)) ?? throw new NotSupportedException();
+            }
+
+            return result;
+        }
+
+        private static T[] LoadVector<[DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>
+            (Stream stream, int offset)
+        {
+            int size = Unsafe.SizeOf<dsl_vector>();
+            byte[] arr = new byte[size];
+
+            stream.Read(arr);
+            var vec = Marshal.PtrToStructure<dsl_vector>(Marshal.UnsafeAddrOfPinnedArrayElement(arr, 0));
+
+            return LoadVector<T>(stream, offset, vec);
+        }
+
+        private static ulong MonotonicTimeMicros()
+        {
+            Kernel32.QueryPerformanceFrequency(out var Frequency);
+            Kernel32.QueryPerformanceCounter(out var StartingTime);
+
+            StartingTime *= 1000000;
+            StartingTime /= Frequency;
+            return (ulong)StartingTime;
         }
     }
 }

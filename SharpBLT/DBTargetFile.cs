@@ -30,7 +30,7 @@ namespace SharpBLT
 
             if (wren_loader_obj != IntPtr.Zero)
             {
-                Wren.wrenReleaseHandle(pd2hook::wren::get_wren_vm(), wren_loader_obj);
+                Wren.wrenReleaseHandle(WrenLoader.GetWrenVM(), wren_loader_obj);
                 wren_loader_obj = IntPtr.Zero;
             }
         }

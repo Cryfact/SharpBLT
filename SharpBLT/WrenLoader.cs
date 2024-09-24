@@ -6,7 +6,7 @@ internal class WrenLoader
     private static bool available = true;
     private static IntPtr vm = IntPtr.Zero;
 
-    private static IntPtr GetWrenVM()
+    internal static IntPtr GetWrenVM()
     {
         if (vm != IntPtr.Zero)
             return vm;

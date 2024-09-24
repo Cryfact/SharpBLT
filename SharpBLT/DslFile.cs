@@ -11,8 +11,8 @@ namespace SharpBLT
     {
         public IdString name;
         public IdString type;
-        public int fileId;
-        public int rawLangId;
+        public uint fileId;
+        public uint rawLangId;
         public IdString langId;
 
         /**

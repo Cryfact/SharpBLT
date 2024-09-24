@@ -6,6 +6,8 @@ public readonly struct IdString(ulong value) : IComparable<IdString>, IEquatable
 {
     private readonly ulong _value = value;
 
+    public static readonly IdString Empty = new IdString(0);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string ToHexString() => $"{_value: x16}";
 
