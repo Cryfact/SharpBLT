@@ -20,7 +20,7 @@ internal class WindowsPlugin : Plugin
 
         Init();
 
-        var initFunc = Kernel32.GetProcAddress<InitFunc>(_module, "SuperBLT_Plugin_Setup") ?? throw new Exception("Invalid module - missing init function.");
+        var initFunc = Kernel32.GetProcAddress<InitFunc>(_module, "SharpBLT_Plugin_Setup") ?? throw new Exception("Invalid module - missing init function.");
         initFunc(GetFunctionPointer);
     }
 

@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 
 public class Game
 {
-    private static byte[] do_xmlload_invoke_bytes = [
+    private static readonly byte[] do_xmlload_invoke_bytes = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFX
             0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
         ];
 
-    private static byte[] node_from_xml_new_bytes = [
+    private static readonly byte[] node_from_xml_new_bytes = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFXNF
             0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
         ];
@@ -35,10 +35,8 @@ public class Game
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 20 57 48 83 EC 50")]
     public delegate void node_from_xml_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);
-
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate void node_from_xml_new_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);
-
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate void do_xmlload_invoke_fn(IntPtr arg0, IntPtr arg1, IntPtr arg2);
 
@@ -51,10 +49,8 @@ public class Game
     private static application_update_fn old_application_update;
 
     private static Hook<node_from_xml_fn> node_from_xml_hook;
-
     private static node_from_xml_fn node_from_xml;
-
-    private static node_from_xml_new_fn node_from_xml_new;
+    private static node_from_xml_fn node_from_xml_new;
     private static do_xmlload_invoke_fn do_xmlload_invoke;
 #pragma warning restore CS8618
 
@@ -104,13 +100,14 @@ public class Game
         Marshal.Copy(node_from_xml_new_bytes, 0, ms_executableMemory + do_xmlload_invoke_bytes.Length, node_from_xml_new_bytes.Length);
 
         NFXPtr = ms_executableMemory;
-        node_from_xml_new = Marshal.GetDelegateForFunctionPointer<node_from_xml_new_fn>(NFXPtr + 8);
+        do_xmlload_invoke = Marshal.GetDelegateForFunctionPointer<do_xmlload_invoke_fn>(NFXPtr + 8);
         NFXNFPtr = ms_executableMemory + do_xmlload_invoke_bytes.Length;
-        do_xmlload_invoke = Marshal.GetDelegateForFunctionPointer<do_xmlload_invoke_fn>(NFXNFPtr + 8);
+        node_from_xml_new = Marshal.GetDelegateForFunctionPointer<node_from_xml_fn>(NFXNFPtr + 8);
 
-        node_from_xml_hook = FunctionUtils.CreateHook<node_from_xml_fn>(nameof(node_from_xml), node_from_xml_new_);
+        node_from_xml_hook = FunctionUtils.CreateHook(nameof(node_from_xml), node_from_xml_new);
+        node_from_xml = node_from_xml_hook.Apply() ?? throw new Exception($"Failed to apply hook for '{nameof(node_from_xml)}'");
 
-        Marshal.WriteIntPtr(NFXPtr, node_from_xml_hook.Address);
+        Marshal.WriteIntPtr(NFXPtr, Marshal.GetFunctionPointerForDelegate(node_from_xml));
         Marshal.WriteIntPtr(NFXNFPtr, Marshal.GetFunctionPointerForDelegate<node_from_xml_new_fn>(node_from_xml_new_));
     }
 
@@ -140,20 +137,14 @@ public class Game
         return old_application_update(_this, unk0);
     }
 
-    private static void node_from_xml_new_(IntPtr node, IntPtr data, IntPtr len)
+    private static void node_from_xml_new_(IntPtr nodePtr, IntPtr dataPtr, IntPtr lenPtr)
     {
-        Console.WriteLine("node_from_xml_new_ called");
+        IntPtr moddedPtr = Tweaker.TweakRaidXml(dataPtr, Marshal.ReadInt32(lenPtr), out var newLen);
 
-        node_from_xml_hook.Restore();
+        Marshal.WriteInt32(lenPtr, newLen);
 
-        var modded = Tweaker.TweakRaidXml(data, Marshal.ReadInt32(len), out var newLen);
+        do_xmlload_invoke(nodePtr, moddedPtr, lenPtr);
 
-        Marshal.WriteInt32(len, newLen);
-
-        do_xmlload_invoke(node, modded, len);
-
-        Tweaker.FreeTweakedRaidXml(modded);
-
-        node_from_xml = node_from_xml_hook.Apply() ?? throw new Exception($"Failed to apply hook for '{nameof(node_from_xml)}'");
+        Tweaker.FreeTweakedRaidXml(moddedPtr);
     }
 }
