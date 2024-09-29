@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace SharpBLT
 {
     public class BLTFileDataStore : BLTAbstractDataStore
     {
         private long file_size;
         private FileStream m_fileStream;
+
+        public BLTFileDataStore(string filename)
+        {
+            m_fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+            file_size = m_fileStream.Length;
+        }
 
         public override bool close()
         {
@@ -42,9 +43,7 @@ namespace SharpBLT
 
         public static BLTFileDataStore Open(string filename)
         {
-            var result = new BLTFileDataStore();
-            result.m_fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            result.file_size = result.m_fileStream.Length;
+            var result = new BLTFileDataStore(filename);
             return result;
         }
     }

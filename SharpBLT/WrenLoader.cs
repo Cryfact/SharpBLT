@@ -6,6 +6,16 @@ internal class WrenLoader
     private static bool available = true;
     private static IntPtr vm = IntPtr.Zero;
 
+    internal static void LockWrenVM()
+    {
+        Monitor.Enter(_lock);
+    }
+
+    internal static void UnlockWrenVM()
+    {
+        Monitor.Exit(_lock);
+    }
+
     internal static IntPtr GetWrenVM()
     {
         if (vm != IntPtr.Zero)

@@ -10,5 +10,11 @@ namespace SharpBLT
     {
 		public string path;
         public string headerPath;
+
+        public DieselBundle()
+        {
+            path = string.Empty;
+            headerPath = string.Empty;
+        }
     }
 }

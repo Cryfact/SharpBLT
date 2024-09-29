@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace SharpBLT
 {
@@ -7,15 +8,21 @@ namespace SharpBLT
         [UnmanagedFunctionPointer(CallingConvention.FastCall)]
         private delegate void StubFn(IntPtr _this, int edx, IntPtr archive, IdString type, IdString name, int u1, int u2);
 
-        private static Hook<StubFn> hook_0;
-        private static Hook<StubFn> hook_1;
-        private static Hook<StubFn> hook_2;
-        private static Hook<StubFn> hook_try_open_property_match_resolver;
+        private static Hook<StubFn>? hook_0;
+        private static Hook<StubFn>? hook_1;
+        private static Hook<StubFn>? hook_2;
+        private static Hook<StubFn>? hook_try_open_property_match_resolver;
 
         private static IntPtr try_open_property_match_resolver;
 
         private static List<IntPtr> try_open_functions;
         private static Dictionary<IdFile, DBTargetFile> overriddenFiles;
+
+        static Assets()
+        {
+            try_open_functions = new List<nint>();
+            overriddenFiles = new Dictionary<IdFile, DBTargetFile>();
+        }
 
         private static void stub_0(IntPtr _this, int edx, IntPtr archive, IdString type, IdString name, int u1, int u2)
         {
@@ -38,7 +45,7 @@ namespace SharpBLT
             hook_load(try_open_property_match_resolver, hook_try_open_property_match_resolver, _this, archive, type, name, u1, u2);
         }
 
-        private static void hook_load(IntPtr orig, Hook<StubFn> hook, IntPtr this_, 
+        private static void hook_load(IntPtr orig, Hook<StubFn>? hook, IntPtr this_, 
             IntPtr archive, IdString type, IdString name, int u1, int u2)
         {
             long pos = 0, len = 0;
@@ -120,106 +127,91 @@ namespace SharpBLT
                     outLen = ds.size() - file.offset;
             };
 
-            /*
-             if (target.plain_file)
-	{
-		load_file(target.plain_file.value());
-	}
-	else if (!target.direct_bundle.is_empty())
-	{
-		load_bundle_item(target.direct_bundle);
-	}
-	else if (target.wren_loader_obj)
-	{
-		auto lock = pd2hook::wren::lock_wren_vm();
-		WrenVM* vm = pd2hook::wren::get_wren_vm();
+            if (!string.IsNullOrEmpty(target.plain_file))
+                load_file(target.plain_file);
+            else if (!target.direct_bundle.IsEmpty())
+                load_bundle_item(target.direct_bundle);
+            else if (target.wren_loader_obj != IntPtr.Zero)
+            {
+                try
+                {
+                    WrenLoader.LockWrenVM();
+                    var vm = WrenLoader.GetWrenVM();
+                    var callHandle = Wren.wrenMakeCallHandle(vm, "load_file(_,_)");
 
-		// Probably not ideal to have it as a static, but hey it works fine and we only ever make one Wren context
-		static WrenHandle* callHandle = wrenMakeCallHandle(vm, "load_file(_,_)");
+                    Wren.wrenEnsureSlots(vm, 3);
+                    Wren.wrenSetSlotHandle(vm, 0, target.wren_loader_obj);
 
-		char hex[17]; // 16-chars long +1 for the null
-		memset(hex, 0, sizeof(hex));
+                    // Set the name
+                    Wren.wrenSetSlotString(vm, 1, asset_file.Name.ToHexString());
 
-		wrenEnsureSlots(vm, 3);
-		wrenSetSlotHandle(vm, 0, target.wren_loader_obj);
+                    // Set the extension
+                    Wren.wrenSetSlotString(vm, 2, asset_file.Ext.ToHexString());
 
-		// Set the name
-		snprintf(hex, sizeof(hex), IDPF, asset_file.name);
-		wrenSetSlotString(vm, 1, hex);
+                    // Invoke it - if it fails the game is very likely going to crash anyway, so make it descriptive now
+                    var result = Wren.wrenCall(vm, callHandle);
+                    if (result == Wren.Result.CompileError || result == Wren.Result.RuntimeError)
+                    {
+                        Logger.Instance().Log(LogType.Error, $"Wren asset load failed for {asset_file.Name.ToHexString()}.{asset_file.Ext.ToHexString()}: compile or runtime error!");
 
-		// Set the extension
-		snprintf(hex, sizeof(hex), IDPF, asset_file.ext);
-		wrenSetSlotString(vm, 2, hex);
+                        User32.MessageBox(IntPtr.Zero, "Failed to load Wren-based asset - see the log for details", "Wren Error", User32.MB_OK);
+                        Environment.Exit(1);
+                    }
 
-		// Invoke it - if it fails the game is very likely going to crash anyway, so make it descriptive now
-		WrenInterpretResult result = wrenCall(vm, callHandle);
-		if (result == WREN_RESULT_COMPILE_ERROR || result == WREN_RESULT_RUNTIME_ERROR)
-		{
-			char buff[1024];
-			memset(buff, 0, sizeof(buff));
-			snprintf(buff, sizeof(buff) - 1, "Wren asset load failed for " IDPFP ": compile or runtime error!",
-			         asset_file.name, asset_file.ext);
-			PD2HOOK_LOG_ERROR(buff);
+                    // Get the wrapper, and make sure it's valid
+                    var ptr = Wren.wrenGetSlotForeign(vm, 0);
 
-#ifdef _WIN32
-			MessageBox(nullptr, "Failed to load Wren-based asset - see the log for details", "Wren Error", MB_OK);
-			ExitProcess(1);
-#else
-			abort();
-#endif
-		}
+                    if (ptr != IntPtr.Zero)
+                    {
+                        var ff = Marshal.PtrToStructure<DBForeignFile>(ptr);
 
-		// Get the wrapper, and make sure it's valid
-		auto* ff = (DBForeignFile*)wrenGetSlotForeign(vm, 0);
-		if (!ff || ff->magic != DBForeignFile::MAGIC_COOKIE)
-		{
-			char buff[1024];
-			memset(buff, 0, sizeof(buff));
-			snprintf(buff, sizeof(buff) - 1,
-			         "Wren load_file function return invalid class or null - for asset " IDPFP " ptr %p",
-			         asset_file.name, asset_file.ext, ff);
-			PD2HOOK_LOG_ERROR(buff);
-#ifdef _WIN32
-			MessageBox(nullptr, "Failed to load Wren-based asset - see the log for details", "Wren Error", MB_OK);
-			ExitProcess(1);
-#else
-			abort();
-#endif
-		}
+                        if (ff.Magic != DBForeignFile.MAGIC_COOKIE)
+                        {
+                            Logger.Instance().Log(LogType.Error, $"Wren load_file function return invalid class or null - for asset {asset_file.Name.ToHexString()}.{asset_file.Ext.ToHexString()} ptr {ptr:X8}");
+                            User32.MessageBox(IntPtr.Zero, "Failed to load Wren-based asset - see the log for details", "Wren Error", User32.MB_OK);
+                        }
 
-		// Now load it's value
-		if (ff->filename)
-		{
-			load_file(*ff->filename);
-		}
-		else if (!ff->asset.is_empty())
-		{
-			load_bundle_item(ff->asset);
-		}
-		else if (ff->stringLiteral)
-		{
-			auto* ds = new BLTStringDataStore(*ff->stringLiteral);
-			*out_datastore = ds;
-			*out_len = ds->size();
-		}
-		else
-		{
-			// Should never happen
-			PD2HOOK_LOG_ERROR("No output contents set for DBForeignFile");
-#ifdef _WIN32
-			MessageBox(nullptr, "Failed to load Wren-based asset - see the log for details", "Wren Error", MB_OK);
-			ExitProcess(1);
-#else
-			abort();
-#endif
-		}
-	}
-	else
-	{
-		// File is disabled, use the regular version of the asset
-		return false;
-	}
-            */
+                        // TODO: check for ff.filename & ff.stringLiteral they are std::string* find the location for const char*
+                        // !!!! only for build raw added !!!!
+#warning "check for ff.filename & ff.stringLiteral they are std::string* find the location for const char*"
+
+                        if (ff.filename != IntPtr.Zero)
+                        {
+                            load_file(Marshal.PtrToStringAnsi(ff.filename)); // load_file(*ff->filename); // we got fucked
+                        }
+                        else if (ff.asset.IsEmpty())
+                        {
+                            load_bundle_item(ff.asset);
+                        }
+                        else if (ff.stringLiteral != IntPtr.Zero)
+                        {
+                            var ds = new BLTStringDataStore(Marshal.PtrToStringAnsi(ff.stringLiteral));  // var ds = new BLTStringDataStore(*ff->stringLiteral); // we got fucked once again
+                            out_datastore = ds;
+                            out_len = ds.size();
+                        }
+                        else
+                        {
+                            // Should never happen
+                            Logger.Instance().Log(LogType.Error, "No output contents set for DBForeignFile");
+                            User32.MessageBox(IntPtr.Zero, "Failed to load Wren-based asset - see the log for details", "Wren Error", User32.MB_OK);
+                        }
+                    }
+                    else
+                    {
+                        Logger.Instance().Log(LogType.Error, $"Wren load_file function return invalid class or null - for asset {asset_file.Name.ToHexString()}.{asset_file.Ext.ToHexString()} ptr {ptr:X8}");
+                        User32.MessageBox(IntPtr.Zero, "Failed to load Wren-based asset - see the log for details", "Wren Error", User32.MB_OK);
+                    }
+                }
+                finally
+                {
+                    WrenLoader.UnlockWrenVM();
+                }
+            }
+            else
+            {
+                // File is disabled, use the regular version of the asset
+                return false;
+            }
 
             out_datastore = outDataStore;
             out_name = string.Empty; // TODO: ?!
@@ -231,7 +223,8 @@ namespace SharpBLT
 
         public static void Initialize()
         {
-            try_open_functions = new List<IntPtr>();
+            var searchPattern = new SearchPattern("6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 83 EC 24 8B 44 24 38 8B 54 24 44 53 56 8B F1 8B 4C 24 44 89 0D ?? ?? ?? ?? 8B 4C 24 48 33 DB 89 5C 24 0C C6 05 ?? ?? ?? ?? ?? A3 ?? ?? ?? ?? 89 0D ?? ?? ?? ?? 89 15 ?? ?? ?? ?? 8B 44 24 50 50 83 EC 08 8B C4 89 08 8B 4C 24 58 89 48 04 8B 54 24 4C 89 64 24 5C 83 EC 08 8B C4 89 10 8B 4C 24 58 89 48 04 8B CE 89 5C 24 48 89 64 24 64 E8 F8 B8 ?? ?? 3B C3 7D 51 53 68 ?? ?? ?? ?? 8D 4C 24 18 C7 44 24 30 0F 00 00 00 89 5C 24 2C");
+            try_open_property_match_resolver = searchPattern.Match(SearchRange.GetStartSearchAddress(), SearchRange.GetSearchSize());
 
             FindAssetLoadSignatures(); // init try_open_functions
             InitAssets(); // init hooks
