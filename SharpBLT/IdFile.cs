@@ -24,6 +24,16 @@ public struct IdFile : IComparable<IdFile>
         Ext = ext;
     }
 
+    public static bool operator==(IdFile x, IdFile y)
+    {
+        return x.Name == y.Name && x.Ext == y.Ext;
+    }
+
+    public static bool operator !=(IdFile x, IdFile y)
+    {
+        return !(x == y);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Equals(object? obj)
     {

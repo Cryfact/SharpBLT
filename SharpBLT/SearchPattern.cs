@@ -13,6 +13,8 @@ public sealed class SearchPattern
 
     private readonly NibblePattern[] m_nibbles;
 
+    public int Length => m_nibbles.Length / 2;
+
     public SearchPattern(string pattern)
     {
         m_nibbles = new NibblePattern[GetNibbleCount(pattern)];

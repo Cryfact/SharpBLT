@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace SharpBLT
 {
@@ -17,9 +12,9 @@ namespace SharpBLT
         private static Hook<StubFn> hook_2;
         private static Hook<StubFn> hook_try_open_property_match_resolver;
 
-        private static StubFn try_open_property_match_resolver;
+        private static IntPtr try_open_property_match_resolver;
 
-        private static List<StubFn> try_open_functions;
+        private static List<IntPtr> try_open_functions;
         private static Dictionary<IdFile, DBTargetFile> overriddenFiles;
 
         private static void stub_0(IntPtr _this, int edx, IntPtr archive, IdString type, IdString name, int u1, int u2)
@@ -43,7 +38,7 @@ namespace SharpBLT
             hook_load(try_open_property_match_resolver, hook_try_open_property_match_resolver, _this, archive, type, name, u1, u2);
         }
 
-        private static void hook_load(StubFn orig, Hook<StubFn> hook, IntPtr this_, 
+        private static void hook_load(IntPtr orig, Hook<StubFn> hook, IntPtr this_, 
             IntPtr archive, IdString type, IdString name, int u1, int u2)
         {
             long pos = 0, len = 0;
@@ -114,7 +109,7 @@ namespace SharpBLT
                     throw new FileNotFoundException(bundle_item.Name.ToString());
                 }
 
-                var ds = DieselDB.Instance().Open(file.bundle);
+                var ds = DieselDB.Open(file.bundle);
                 outDataStore = ds;
                 outPos = file.offset;
 
@@ -236,23 +231,106 @@ namespace SharpBLT
 
         public static void Initialize()
         {
-            try_open_functions = new List<StubFn>();
+            try_open_functions = new List<IntPtr>();
 
-            /* ... init hooks & other vars ... */
+            FindAssetLoadSignatures(); // init try_open_functions
+            InitAssets(); // init hooks
+        }
 
-            InitAssets();
+        private static void FindAssetLoadSignatures(/*string module, SignatureCacheDB cache, out int cache_misses*/)
+        {
+            var searchPattern = new SearchPattern("48 89 54 24 10 55 53 56 57 41 54 41 56 41 57 48 8D 6C 24 E9 48 81 EC E0 00 00 00 49");
+            int targetCount = 3;
+
+            var dllBase = SearchRange.GetStartSearchAddress();
+            var size = SearchRange.GetSearchSize();
+
+           // cache_misses = 0;
+
+            // we don't have a cache, and this cache was useless, he searched for the adresses even when the adress was found in cache.
+            // Implement caching - if all the signatures are at the same place, assume it's still working
+           // int cache_count = cache.GetAddress("asset_load_signatures_count");
+           // if (cache_count == targetCount)
+            {
+                for (int i = 0; i < targetCount; i++)
+                {
+                //    var target = cache.GetAddress($"asset_load_signatures_id_{i}");
+
+                    // Make sure this signature is in-bounds
+                   // if (target >= size - searchPattern.Length)
+                   //     goto cache_fail;
+
+                    IntPtr searchedAddress = searchPattern.Match(dllBase, (int)size);
+
+                    if (searchedAddress == IntPtr.Zero)
+                        throw new Exception("invalid adress found for asset_load_signatures");
+
+                    try_open_functions.Add(searchedAddress);
+                }
+                return;
+
+           // cache_fail:
+           //     try_open_functions.Clear();
+            }
+
+            // Make sure the cache gets updated afterwards
+            /*++cache_misses;
+
+            for (var i = 0; i < size - searchPattern.Length; i++)
+            {
+                var searchedAddress = searchPattern.Match(dllBase + i, (int)size);
+
+                if (searchedAddress == IntPtr.Zero)
+                    continue;
+
+                // Some games (PDTH) have very similar try_open signatures, so double check here.
+                if (searchedAddress == try_open_property_match_resolver)
+                {
+                    Logger.Instance().Log(LogType.Log, $"Asset loading signature ({searchedAddress:X8}) matched 'try_open_property_match_resolver' ({try_open_property_match_resolver_ptr:X8}) ignoring...");
+                    continue;
+                }
+
+                cache.UpdateAddress($"asset_load_signatures_id_{try_open_functions.Count}", i);
+
+                try_open_functions.Add(Marshal.GetDelegateForFunctionPointer<StubFn>(searchedAddress));
+
+                Logger.Instance().Log(LogType.Log, $"Found signature #{try_open_functions.Count} for asset loading at {searchedAddress:X8}");
+            }
+
+            cache.UpdateAddress("asset_load_signatures_count", try_open_functions.Count);
+
+            if (targetCount < try_open_functions.Count)
+            {
+                Logger.Instance().Log(LogType.Warn, "Failed to locate enough instances of the asset loading function:");
+            }
+            else if (targetCount > try_open_functions.Count)
+            {
+                Logger.Instance().Log(LogType.Warn, "Located too many instances of the asset loading function:");
+            }*/
         }
 
         private static void InitAssets()
         {
             if (try_open_functions.Count != 0)
+            {
+                hook_0 = new Hook<StubFn>(try_open_functions[0], stub_0);
                 hook_0.Apply();
+            }
 
             if (try_open_functions.Count > 1)
+            {
+                hook_1 = new Hook<StubFn>(try_open_functions[1], stub_1);
                 hook_1.Apply();
+            }
 
             if (try_open_functions.Count > 2)
+            {
+                hook_2 = new Hook<StubFn>(try_open_functions[2], stub_2);
                 hook_2.Apply();
+            }
+
+            hook_try_open_property_match_resolver = new Hook<StubFn>(
+                try_open_property_match_resolver, stub_try_open_property_match_resolver);
 
             hook_try_open_property_match_resolver.Apply();
             setup_extra_asset_hooks();
