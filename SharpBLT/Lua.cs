@@ -487,14 +487,14 @@ public sealed class Lua
 
     private static void lua_newcall(IntPtr L, int args, int returns)
     {
-        lua_getglobal(L, "debug");
-        lua_getfield(L, -1, "traceback");
-        lua_remove(L, -2);
+        //lua_getglobal(L, "debug");
+        //lua_getfield(L, -1, "traceback");
+        //lua_remove(L, -2);
 
-        int errorhandler = lua_gettop(L) - args - 1;
-        lua_insert(L, errorhandler);
+        //int errorhandler = lua_gettop(L) - args - 1;
+        //lua_insert(L, errorhandler);
 
-        int result = lua_pcall(L, args, returns, errorhandler);
+        int result = lua_pcall(L, args, returns, 0);
         if (result != 0)
         {
             string? message = lua_tostring(L, -1);
@@ -509,7 +509,7 @@ public sealed class Lua
             }
         }
 
-        lua_remove(L, errorhandler);
+        //lua_remove(L, errorhandler);
     }
 
     private static void luaF_close(IntPtr L)
