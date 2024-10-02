@@ -1,3 +1,6 @@
 [submodule "wren/wren"]
 	path = wren/wren
 	url = https://github.com/wren-lang/wren.git
+[submodule "Luajit/Luajit"]
+	path = Luajit/Luajit
+	url = https://github.com/LeonTheo02/LuaJIT.git
