@@ -16,6 +16,15 @@
     <None Remove="BLTHashLib\**" />
   </ItemGroup>
 
+	<ItemGroup>
+		<!-- Generate direct PInvokes for Dependency -->
+		<DirectPInvoke Include="luajit" />
+		<!-- Specify library to link against -->
+		<NativeLibrary Include="luajit.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+		<!-- Specify the path to search for libraries -->
+		<LinkerArg Include="/LIBPATH:..\\x64\\Release" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+	</ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="HttpClientFactory" Version="1.0.5" />
     <PackageReference Include="SharpDisasm" Version="1.1.11" />

@@ -19,88 +19,126 @@ public sealed class Lua
         public IntPtr Function;
     }
 
+    [DllImport("luajit")]
+    public static extern int lua_gettop(IntPtr luaState);
+
+    [DllImport("luajit")]
+    public static extern void lua_settop(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool lua_toboolean(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern long? lua_tointeger(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern double? lua_tonumber(IntPtr luaState, int arg0);
+
+    [DllImport("luajit", EntryPoint = "lua_tolstring")]
+    public static extern IntPtr lua_tolstring_ptr(IntPtr luaState, int arg0, out IntPtr arg1);
+
+    [DllImport("luajit")]
+    public static extern long lua_objlen(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern IntPtr lua_touserdata(IntPtr luaState, int arg0);
+
+    [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
+    public static extern int luaL_loadfilex_ptr(IntPtr luaState, IntPtr arg0, IntPtr arg1);
+
+    [DllImport("luajit")]
+    public static extern int luaL_loadstring(IntPtr luaState, IntPtr arg0);
+
+    [DllImport("luajit")]
+    public static extern int lua_pcall(IntPtr luaState, int arg0, int arg1, int arg2);
+
+    [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
+    public static extern void  lua_getfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
+
+    [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
+    public static extern void lua_setfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
+
+    [DllImport("luajit")]
+    public static extern void lua_createtable(IntPtr luaState, int arg0, int arg1);
+
+    [DllImport("luajit")]
+    public static extern void lua_insert(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_replace(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_remove(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_settable(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_pushinteger(IntPtr luaState, long arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_pushboolean(IntPtr luaState, [MarshalAs(UnmanagedType.I1)] bool arg0);
+
+    [DllImport("luajit", EntryPoint = "lua_pushcclosure")]
+    public static extern void lua_pushcclosure_ptr(IntPtr luaState, IntPtr arg0, int arg1);
+
+    [DllImport("luajit", EntryPoint = "lua_pushlstring")]
+    public static extern void lua_pushlstring_ptr(IntPtr luaState, IntPtr arg0, long arg1);
+
+    [DllImport("luajit", EntryPoint = "lua_pushstring")]
+    public static extern void lua_pushstring_ptr(IntPtr luaState, IntPtr arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_pushvalue(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_pushnil(IntPtr luaState);
+
+    [DllImport("luajit")]
+    public static extern int lua_checkstack(IntPtr luaState, int arg0);
+
+    [DllImport("luajit", EntryPoint = "luaL_openlib")]
+    public static extern void luaI_openlib_ptr(IntPtr luaState, IntPtr arg0, IntPtr arg1, int arg2);
+
+    [DllImport("luajit")]
+    public static extern int luaL_ref(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void lua_rawgeti(IntPtr luaState, int arg0, int arg1);
+
+    [DllImport("luajit")]
+    public static extern void lua_rawseti(IntPtr luaState, int arg0, int arg1);
+
+    [DllImport("luajit")]
+    public static extern int lua_type(IntPtr luaState, int arg0);
+
+    [DllImport("luajit", EntryPoint = "lua_typename")]
+    public static extern IntPtr lua_typename_ptr(IntPtr luaState, int arg0);
+
+    [DllImport("luajit")]
+    public static extern void luaL_unref(IntPtr luaState, int arg0, int arg1);
+
+    [DllImport("luajit", EntryPoint = "luaL_error")]
+    public static extern int luaL_error_ptr(IntPtr luaState, IntPtr arg0, IntPtr args);
+
+    [DllImport("luajit")]
+    public static extern int lua_error(IntPtr luaState);
+
+
     [FunctionPattern("48 63 C2 4C 8B D1 48 8B 51 28 48 C1 E0 03 4C 8B CA 4C 2B C8 48 8D 42 08 48 89 41 28")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_call_fn(IntPtr luaState, int arg0, int arg1);
-
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B 59 10 41 8B F0 4C 63 DA 4C 8B D1 0F B6 BB C1")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int lua_pcall_fn(IntPtr luaState, int arg0, int arg1, int arg2);
-
-    [FunctionPattern("48 8B 41 28 48 2B 41 20 48 C1 F8 03 C3")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int lua_gettop_fn(IntPtr luaState);
-
-    [FunctionPattern("40 53 48 83 EC 20 48 8B D9 85 D2 78 ?? 4C 8B 41")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_settop_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 08 33 C0 48 C1")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    [return: MarshalAs(UnmanagedType.I1)]
-    public delegate bool lua_toboolean_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 10 48 8B CA 48 C1 F9 2F 83 F9 F2 ?? ?? F2 0F 10 00 F2 48 0F")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate long? lua_tointeger_fn(IntPtr luaState, int arg0); // FIXME? types?
-
-    [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 10 48 8B CA 48 C1 F9 2F 83 F9 F2 ?? ?? F2 0F 10 00 48 83 C4")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate double? lua_tonumber_fn(IntPtr luaState, int arg0); // FIXME? types?
-
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 49 8B F8 8B DA 48 8B F1")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate IntPtr lua_tolstring_fn(IntPtr luaState, int arg0, out IntPtr arg1); // FIXME? types?
-
-    [FunctionPattern("40 53 48 83 EC 20 4C 8B D9 E8 ?? ?? ?? ?? 48 8B")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate long lua_objlen_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("48 83 EC 28 E8 ?? ?? ?? ?? 48 8B 00")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate IntPtr lua_touserdata_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("48 89 5C 24 20 55 56 57 48 81 EC 50 02 00 00 48")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int luaL_loadfilex_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1); // FIXME? types?
-
-    [FunctionPattern("48 83 EC 48 48 89 54 24 30 48 83 C8 FF 0F 1F 00")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int luaL_loadstring_fn(IntPtr luaState, IntPtr arg0);
 
     // TODO
     [FunctionPattern("4C 8B DC 53 56 57 48 81 EC E0 00 00 00")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int lua_loadx_fn(IntPtr luaState, IntPtr luaReader, IntPtr arg1, IntPtr arg2, IntPtr arg3);
 
-    [FunctionPattern("48 89 5C 24 10 57 48 83 EC 20 4D 8B D8 48 8B D9")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_getfield_fn(IntPtr luaState, int arg0, IntPtr arg1);
-
-    [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 4D 8B D8 48 8B D9")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_setfield_fn(IntPtr luaState, int arg0, IntPtr arg1);
-
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4C 8B 49 10 41 8B F8 8B F2 48 8B D9 49 8B 41 28 49")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_createtable_fn(IntPtr luaState, int arg0, int arg1);
-
     // TODO
     [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 4C 8B 41 10 48 8B FA")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr lua_newuserdata_fn(IntPtr luaState, long arg0); // FIXME int/long? size_t?
-
-    [FunctionPattern("4C 8B C9 85 D2 7E ?? 8D 42 FF 48 63 D0 48 8B 41")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_insert_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("40 53 48 83 EC 20 44 8B C2")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_replace_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("4C 8B C1 85 D2 7E ?? 8D 42 FF 48 63 D0 48 8B 41 20 48 8B 49 28 48 8D 04 D0 48 3B C1")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_remove_fn(IntPtr luaState, int arg0);
 
     [FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B F2 48 8B E9 48 8B CE 41 B9 70")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -114,10 +152,6 @@ public sealed class Lua
     [FunctionPattern("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 43 28 48 8B D0 49 83 E8 08")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_gettable_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 43 28 48 8B D0 49 83 E8 10")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_settable_fn(IntPtr luaState, int arg0);
 
     // TODO
     [FunctionPattern("48 83 EC 28 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 53 28 4C 8B C8")]
@@ -134,50 +168,13 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_pushnumber_fn(IntPtr luaState, double arg0); // FIXME double? lua_Number?
 
-    [FunctionPattern("48 8B 41 28 0F 57 C0 F2 48 0F 2A C2 F2 0F 11 00")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushinteger_fn(IntPtr luaState, long arg0); // FIXME int/long? size_t?
-
-    [FunctionPattern("48 8B 41 28 45 33 C0 85 D2 41 0F 95 C0 49 FF C0")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushboolean_fn(IntPtr luaState, [MarshalAs(UnmanagedType.I1)] bool arg0);
-
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4C 8B 49 10 48 8B F2 49 63 F8 48 8B D9 49 8B 41 28")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushcclosure_fn(IntPtr luaState, IntPtr arg0, int arg1);
-
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4C 8B 49 10 49 8B F8 48 8B F2 48 8B D9 49 8B 41 28")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushlstring_fn(IntPtr luaState, IntPtr arg0, long arg1); // FIXME int/long? size_t?
-
-    [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 48 8B FA 48 8B D9 48 85 D2 75 ?? 48 8B 41 28 49 83 C8 FF 4C 89 00")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushstring_fn(IntPtr luaState, IntPtr arg0);
-
     // TODO
     [FunctionPattern("48 89 54 24 10 4C 89 44 24 18 4C 89 4C 24 20 53 48 83 EC 20 4C 8B 41 10")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr lua_pushfstring_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1);
 
-    [FunctionPattern("40 53 48 83 EC 20 48 8B D9 81 FA 40 1F 00 00 7F")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int lua_checkstack_fn(IntPtr luaState, int arg0);
 
-    [FunctionPattern("48 83 EC 28 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 53 28 48 8B 00")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushvalue_fn(IntPtr luaState, int arg0);
 
-    [FunctionPattern("48 8B 41 28 48 C7 00 FF FF FF FF 48 83 41 28 08 48 8B 41 28")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_pushnil_fn(IntPtr luaState);
-
-    [FunctionPattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 20 48 8B 41 28")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void luaI_openlib_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1, int arg2);
-
-    [FunctionPattern("48 89 5C 24 20 57 48 83 EC 20 8D 82 0F 27 00 00")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int luaL_ref_fn(IntPtr luaState, int arg0);
 
     // TODO
     [FunctionPattern("40 53 48 83 EC 20 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 5B 28")]
@@ -188,26 +185,6 @@ public sealed class Lua
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 48 8B 73 28")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate void lua_rawset_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("40 53 48 83 EC 20 4D 63 D8 48 8B D9 E8 ?? ?? ?? ?? 48 BA FF FF FF FF FF")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_rawgeti_fn(IntPtr luaState, int arg0, int arg1);
-
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 4D 63 D8 48 8B D9 E8")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_rawseti_fn(IntPtr luaState, int arg0, int arg1);
-
-    [FunctionPattern("48 83 EC 28 4C 8B D9 E8 B4 D9 FE FF 48 8B D0 48")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int lua_type_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("8D 42 01 48 98 48 8D 0D")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate IntPtr lua_typename_fn(IntPtr luaState, int arg0);
-
-    [FunctionPattern("45 85 C0 0F 88 ?? ?? ?? ?? 48 89 5C 24 08 48 89")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void luaL_unref_fn(IntPtr luaState, int arg0, int arg1);
 
     // TODO
     [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 45 8B D8 48 8B D9 E8 ?? ?? ?? ?? 41 8B D3 48 8B CB 48 8B F8 E8 ?? ?? ?? ?? 4C 8B 17")]
@@ -224,56 +201,13 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int luaL_checkudata_fn(IntPtr luaState, int arg0, IntPtr arg1);
 
-    [FunctionPattern("48 89 54 24 10 4C 89 44 24 18 4C 89 4C 24 20 53 48 83 EC 20 4C 8D 44 24 40")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int luaL_error_fn(IntPtr luaState, IntPtr arg0, IntPtr args);
-
-    [FunctionPattern("48 89 5C 24 08 57 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 48 85 C0")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate int lua_error_fn(IntPtr luaState);
-
     [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 41 0F B6 F8 0F B6 F2 48 8B D9 45 85 C9")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr luaL_newstate_fn(IntPtr arg0, [MarshalAs(UnmanagedType.I1)] bool arg2,
                                          [MarshalAs(UnmanagedType.I1)] bool arg3, int arg4);
 
 #pragma warning disable CS0649
-    public static readonly lua_pcall_fn lua_pcall;
-    public static readonly lua_gettop_fn lua_gettop;
-    public static readonly lua_settop_fn lua_settop;
-    public static readonly lua_toboolean_fn lua_toboolean;
-    public static readonly lua_tointeger_fn lua_tointeger;
-    public static readonly lua_tonumber_fn lua_tonumber;
-    public static readonly lua_tolstring_fn lua_tolstring_ptr;
-    public static readonly lua_objlen_fn lua_objlen;
-    public static readonly lua_touserdata_fn lua_touserdata;
-    private static readonly luaL_loadfilex_fn luaL_loadfilex_ptr;
-    public static readonly luaL_loadstring_fn luaL_loadstring;
-    private static readonly lua_getfield_fn lua_getfield_ptr;
-    private static readonly lua_setfield_fn lua_setfield_ptr;
-    public static readonly lua_createtable_fn lua_createtable;
-    public static readonly lua_insert_fn lua_insert;
-    public static readonly lua_replace_fn lua_replace;
-    public static readonly lua_remove_fn lua_remove;
     public static readonly lua_newstate_fn lua_newstate;
-    public static readonly lua_settable_fn lua_settable;
-    public static readonly lua_pushinteger_fn lua_pushinteger;
-    public static readonly lua_pushboolean_fn lua_pushboolean;
-    private static readonly lua_pushcclosure_fn lua_pushcclosure_ptr;
-    private static readonly lua_pushlstring_fn lua_pushlstring_ptr;
-    private static readonly lua_pushstring_fn lua_pushstring_ptr;
-    public static readonly lua_checkstack_fn lua_checkstack;
-    public static readonly lua_pushvalue_fn lua_pushvalue;
-    public static readonly lua_pushnil_fn lua_pushnil;
-    private static readonly luaI_openlib_fn luaI_openlib_ptr;
-    public static readonly luaL_ref_fn luaL_ref;
-    public static readonly lua_rawgeti_fn lua_rawgeti;
-    public static readonly lua_rawseti_fn lua_rawseti;
-    public static readonly lua_type_fn lua_type;
-    private static readonly lua_typename_fn lua_typename_ptr;
-    public static readonly luaL_unref_fn luaL_unref;
-    private static readonly luaL_error_fn luaL_error_ptr;
-    public static readonly lua_error_fn lua_error;
 
     private static readonly Hook<lua_call_fn> ms_lua_call_hook;
     private static readonly Hook<luaL_newstate_fn> ms_luaL_newstate_hook;
@@ -296,42 +230,6 @@ public sealed class Lua
         ms_lua_call_hook = FunctionUtils.CreateHook<lua_call_fn>(nameof(lua_call), lua_newcall);
         ms_luaL_newstate_hook = FunctionUtils.CreateHook<luaL_newstate_fn>(nameof(luaL_newstate), luaL_newstate_new);
         ms_lua_close_hook = FunctionUtils.CreateHook<lua_close_fn>(nameof(lua_close), luaF_close);
-
-        lua_pcall = FunctionUtils.ResolveFunction<lua_pcall_fn>(nameof(lua_pcall));
-        lua_gettop = FunctionUtils.ResolveFunction<lua_gettop_fn>(nameof(lua_gettop));
-        lua_settop = FunctionUtils.ResolveFunction<lua_settop_fn>(nameof(lua_settop));
-        lua_toboolean = FunctionUtils.ResolveFunction<lua_toboolean_fn>(nameof(lua_toboolean));
-        lua_tointeger = FunctionUtils.ResolveFunction<lua_tointeger_fn>(nameof(lua_tointeger));
-        lua_tonumber = FunctionUtils.ResolveFunction<lua_tonumber_fn>(nameof(lua_tonumber));
-        lua_tolstring_ptr = FunctionUtils.ResolveFunction<lua_tolstring_fn>(nameof(lua_tolstring));
-        lua_objlen = FunctionUtils.ResolveFunction<lua_objlen_fn>(nameof(lua_objlen));
-        lua_touserdata = FunctionUtils.ResolveFunction<lua_touserdata_fn>(nameof(lua_touserdata));
-        luaL_loadfilex_ptr = FunctionUtils.ResolveFunction<luaL_loadfilex_fn>(nameof(luaL_loadfilex));
-        luaL_loadstring = FunctionUtils.ResolveFunction<luaL_loadstring_fn>(nameof(luaL_loadstring));
-        lua_getfield_ptr = FunctionUtils.ResolveFunction<lua_getfield_fn>(nameof(lua_getfield));
-        lua_setfield_ptr = FunctionUtils.ResolveFunction<lua_setfield_fn>(nameof(lua_setfield));
-        lua_createtable = FunctionUtils.ResolveFunction<lua_createtable_fn>(nameof(lua_createtable));
-        lua_insert = FunctionUtils.ResolveFunction<lua_insert_fn>(nameof(lua_insert));
-        lua_replace = FunctionUtils.ResolveFunction<lua_replace_fn>(nameof(lua_replace));
-        lua_remove = FunctionUtils.ResolveFunction<lua_remove_fn>(nameof(lua_remove));
-        lua_settable = FunctionUtils.ResolveFunction<lua_settable_fn>(nameof(lua_settable));
-        lua_pushinteger = FunctionUtils.ResolveFunction<lua_pushinteger_fn>(nameof(lua_pushinteger));
-        lua_pushboolean = FunctionUtils.ResolveFunction<lua_pushboolean_fn>(nameof(lua_pushboolean));
-        lua_pushcclosure_ptr = FunctionUtils.ResolveFunction<lua_pushcclosure_fn>(nameof(lua_pushcclosure));
-        lua_pushlstring_ptr = FunctionUtils.ResolveFunction<lua_pushlstring_fn>(nameof(lua_pushlstring));
-        lua_pushstring_ptr = FunctionUtils.ResolveFunction<lua_pushstring_fn>(nameof(lua_pushstring));
-        lua_pushvalue = FunctionUtils.ResolveFunction<lua_pushvalue_fn>(nameof(lua_pushvalue));
-        lua_pushnil = FunctionUtils.ResolveFunction<lua_pushnil_fn>(nameof(lua_pushnil));
-        lua_checkstack = FunctionUtils.ResolveFunction<lua_checkstack_fn>(nameof(lua_checkstack));
-        luaI_openlib_ptr = FunctionUtils.ResolveFunction<luaI_openlib_fn>(nameof(luaI_openlib));
-        luaL_ref = FunctionUtils.ResolveFunction<luaL_ref_fn>(nameof(luaL_ref));
-        lua_rawgeti = FunctionUtils.ResolveFunction<lua_rawgeti_fn>(nameof(lua_rawgeti));
-        lua_rawseti = FunctionUtils.ResolveFunction<lua_rawseti_fn>(nameof(lua_rawseti));
-        lua_type = FunctionUtils.ResolveFunction<lua_type_fn>(nameof(lua_type));
-        lua_typename_ptr = FunctionUtils.ResolveFunction<lua_typename_fn>(nameof(lua_typename));
-        luaL_unref = FunctionUtils.ResolveFunction<luaL_unref_fn>(nameof(luaL_unref));
-        luaL_error_ptr = FunctionUtils.ResolveFunction<luaL_error_fn>(nameof(luaL_error));
-        lua_error = FunctionUtils.ResolveFunction<lua_error_fn>(nameof(lua_error));
 
         lua_call = ms_lua_call_hook.Apply() ?? throw new Exception("Failed to apply lua_call hook");
         luaL_newstate = ms_luaL_newstate_hook.Apply() ?? throw new Exception("Failed to apply luaL_newstate hook");
