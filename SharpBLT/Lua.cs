@@ -35,7 +35,7 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern double? lua_tonumber(IntPtr luaState, int arg0);
 
-    [DllImport("luajit", EntryPoint = "lua_tolstring")]
+    [DllImport("luajit", EntryPoint = nameof(lua_tolstring))]
     public static extern IntPtr lua_tolstring_ptr(IntPtr luaState, int arg0, out IntPtr arg1);
 
     [DllImport("luajit")]
@@ -44,7 +44,7 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern IntPtr lua_touserdata(IntPtr luaState, int arg0);
 
-    [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
+    [DllImport("luajit", EntryPoint = nameof(luaL_loadfilex))]
     public static extern int luaL_loadfilex_ptr(IntPtr luaState, IntPtr arg0, IntPtr arg1);
 
     [DllImport("luajit")]
@@ -53,10 +53,10 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern int lua_pcall(IntPtr luaState, int arg0, int arg1, int arg2);
 
-    [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
+    [DllImport("luajit", EntryPoint = nameof(lua_getfield))]
     public static extern void lua_getfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
 
-    [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
+    [DllImport("luajit", EntryPoint = nameof(lua_setfield))]
     public static extern void lua_setfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
 
     [DllImport("luajit")]
@@ -80,13 +80,13 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern void lua_pushboolean(IntPtr luaState, [MarshalAs(UnmanagedType.I1)] bool arg0);
 
-    [DllImport("luajit", EntryPoint = "lua_pushcclosure")]
+    [DllImport("luajit", EntryPoint = nameof(lua_pushcclosure))]
     public static extern void lua_pushcclosure_ptr(IntPtr luaState, IntPtr arg0, int arg1);
 
-    [DllImport("luajit", EntryPoint = "lua_pushlstring")]
+    [DllImport("luajit", EntryPoint = nameof(lua_pushlstring))]
     public static extern void lua_pushlstring_ptr(IntPtr luaState, IntPtr arg0, long arg1);
 
-    [DllImport("luajit", EntryPoint = "lua_pushstring")]
+    [DllImport("luajit", EntryPoint = nameof(lua_pushstring))]
     public static extern void lua_pushstring_ptr(IntPtr luaState, IntPtr arg0);
 
     [DllImport("luajit")]
@@ -98,7 +98,7 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern int lua_checkstack(IntPtr luaState, int arg0);
 
-    [DllImport("luajit", EntryPoint = "luaL_openlib")]
+    [DllImport("luajit", EntryPoint = nameof(luaL_openlib))]
     public static extern void luaI_openlib_ptr(IntPtr luaState, IntPtr arg0, IntPtr arg1, int arg2);
 
     [DllImport("luajit")]
@@ -113,13 +113,13 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern int lua_type(IntPtr luaState, int arg0);
 
-    [DllImport("luajit", EntryPoint = "lua_typename")]
+    [DllImport("luajit", EntryPoint = nameof(lua_typename))]
     public static extern IntPtr lua_typename_ptr(IntPtr luaState, int arg0);
 
     [DllImport("luajit")]
     public static extern void luaL_unref(IntPtr luaState, int arg0, int arg1);
 
-    [DllImport("luajit", EntryPoint = "luaL_error")]
+    [DllImport("luajit", EntryPoint = nameof(luaL_error))]
     public static extern int luaL_error_ptr(IntPtr luaState, IntPtr arg0, IntPtr args);
 
     [DllImport("luajit")]
@@ -135,6 +135,7 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr lua_newuserdata_fn(IntPtr luaState, long arg0); // FIXME int/long? size_t?
 
+    // TODO?
     //[FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B F2 48 8B E9 48 8B CE 41 B9 70")]
     //[UnmanagedFunctionPointer(DefaultCallingConvention)]
     //public delegate IntPtr lua_newstate_fn(IntPtr luaAlloc, IntPtr arg0); // FIXME? types?
@@ -202,6 +203,7 @@ public sealed class Lua
     public delegate void lua_close_fn(IntPtr luaState);
 
 #pragma warning disable CS0649
+    // TODO?
     //public static readonly lua_newstate_fn lua_newstate;
 
     private static readonly Hook<ctor_lua_Alloc_fn> ms_ctor_lua_Alloc_hook;

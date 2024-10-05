@@ -17,7 +17,7 @@ public class Program
 
     }
 
-    [UnmanagedCallersOnly(EntryPoint = "NativeMain")]
+    [UnmanagedCallersOnly(EntryPoint = nameof(NativeMain))]
     public static void NativeMain(IntPtr ptr)
     {
         ValidateModDirectories();
