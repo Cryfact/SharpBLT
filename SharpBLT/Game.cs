@@ -6,14 +6,14 @@ using System.Runtime.InteropServices;
 public class Game
 {
     private static readonly byte[] do_xmlload_invoke_bytes = [
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFX
-            0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
-        ];
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFX
+        0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
+    ];
 
     private static readonly byte[] node_from_xml_new_bytes = [
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFXNF
-            0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
-        ];
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // NFXNF
+        0xFF, 0x25, 0xF2, 0xFF, 0xFF, 0xFF              // JMP cs:-14
+    ];
 
     [FunctionPattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 56 41 57 48 83 EC 50 0F 29 74 24 40 0F 29 7C 24 30 48 8B F9")]
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
@@ -23,7 +23,7 @@ public class Game
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate int try_open_property_match_resolver_fn();
 
-    [FunctionPattern("4C 8B C1 85 D2 7E 23 8D 42 FF 48 63 D0 48 8B 41 20 48 8D 04 D0")]
+    [FunctionPattern("4C 8B C1 85 D2 7E ?? 48 8B 41 ?? 48 63 D2")]
     [UnmanagedFunctionPointer(Lua.DefaultCallingConvention)]
     public delegate IntPtr index2adr_fn(IntPtr luaState, int arg0);
 

@@ -54,7 +54,7 @@ public sealed class Lua
     public static extern int lua_pcall(IntPtr luaState, int arg0, int arg1, int arg2);
 
     [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
-    public static extern void  lua_getfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
+    public static extern void lua_getfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
 
     [DllImport("luajit", EntryPoint = "luaL_loadfilex")]
     public static extern void lua_setfield_ptr(IntPtr luaState, int arg0, IntPtr arg1);
@@ -125,11 +125,6 @@ public sealed class Lua
     [DllImport("luajit")]
     public static extern int lua_error(IntPtr luaState);
 
-
-    [FunctionPattern("48 63 C2 4C 8B D1 48 8B 51 28 48 C1 E0 03 4C 8B CA 4C 2B C8 48 8D 42 08 48 89 41 28")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_call_fn(IntPtr luaState, int arg0, int arg1);
-
     // TODO
     [FunctionPattern("4C 8B DC 53 56 57 48 81 EC E0 00 00 00")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -140,13 +135,9 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr lua_newuserdata_fn(IntPtr luaState, long arg0); // FIXME int/long? size_t?
 
-    [FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B F2 48 8B E9 48 8B CE 41 B9 70")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate IntPtr lua_newstate_fn(IntPtr luaAlloc, IntPtr arg0); // FIXME? types?
-
-    [FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B 79 10 48 8B B7 C8 00 00 00 48")]
-    [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate void lua_close_fn(IntPtr luaState);
+    //[FunctionPattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B F2 48 8B E9 48 8B CE 41 B9 70")]
+    //[UnmanagedFunctionPointer(DefaultCallingConvention)]
+    //public delegate IntPtr lua_newstate_fn(IntPtr luaAlloc, IntPtr arg0); // FIXME? types?
 
     // TODO
     [FunctionPattern("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 43 28 48 8B D0 49 83 E8 08")]
@@ -173,9 +164,6 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate IntPtr lua_pushfstring_fn(IntPtr luaState, IntPtr arg0, IntPtr arg1);
 
-
-
-
     // TODO
     [FunctionPattern("40 53 48 83 EC 20 4C 8B D9 E8 ?? ?? ?? ?? 49 8B 5B 28")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
@@ -201,22 +189,29 @@ public sealed class Lua
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
     public delegate int luaL_checkudata_fn(IntPtr luaState, int arg0, IntPtr arg1);
 
-    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 41 0F B6 F8 0F B6 F2 48 8B D9 45 85 C9")]
+    [FunctionPattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 41 0F B6 F8 0F B6 F2")]
     [UnmanagedFunctionPointer(DefaultCallingConvention)]
-    public delegate IntPtr luaL_newstate_fn(IntPtr arg0, [MarshalAs(UnmanagedType.I1)] bool arg2,
-                                         [MarshalAs(UnmanagedType.I1)] bool arg3, int arg4);
+    public delegate IntPtr ctor_lua_Alloc_fn(IntPtr arg0, IntPtr arg2, long arg3, long arg4);
+
+    [FunctionPattern("48 63 C2 4C 8B D1")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_call_fn(IntPtr luaState, int arg0, int arg1);
+
+    [FunctionPattern("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 48 8B 79 ?? 48 8B 9F")]
+    [UnmanagedFunctionPointer(DefaultCallingConvention)]
+    public delegate void lua_close_fn(IntPtr luaState);
 
 #pragma warning disable CS0649
-    public static readonly lua_newstate_fn lua_newstate;
+    //public static readonly lua_newstate_fn lua_newstate;
 
+    private static readonly Hook<ctor_lua_Alloc_fn> ms_ctor_lua_Alloc_hook;
     private static readonly Hook<lua_call_fn> ms_lua_call_hook;
-    private static readonly Hook<luaL_newstate_fn> ms_luaL_newstate_hook;
     private static readonly Hook<lua_close_fn> ms_lua_close_hook;
 
 #pragma warning restore CS0649
 
+    private static readonly ctor_lua_Alloc_fn ctor_lua_Alloc;
     private static readonly lua_call_fn lua_call;
-    private static readonly luaL_newstate_fn luaL_newstate;
     private static readonly lua_close_fn lua_close;
 
     private static readonly List<IntPtr> ms_activeStates;
@@ -227,12 +222,12 @@ public sealed class Lua
     static Lua()
 #pragma warning restore CS8618
     {
+        ms_ctor_lua_Alloc_hook = FunctionUtils.CreateHook<ctor_lua_Alloc_fn>(nameof(ctor_lua_Alloc), ctor_lua_Alloc_new);
         ms_lua_call_hook = FunctionUtils.CreateHook<lua_call_fn>(nameof(lua_call), lua_newcall);
-        ms_luaL_newstate_hook = FunctionUtils.CreateHook<luaL_newstate_fn>(nameof(luaL_newstate), luaL_newstate_new);
         ms_lua_close_hook = FunctionUtils.CreateHook<lua_close_fn>(nameof(lua_close), luaF_close);
 
+        ctor_lua_Alloc = ms_ctor_lua_Alloc_hook.Apply() ?? throw new Exception("Failed to apply ctor_lua_Alloc hook");
         lua_call = ms_lua_call_hook.Apply() ?? throw new Exception("Failed to apply lua_call hook");
-        luaL_newstate = ms_luaL_newstate_hook.Apply() ?? throw new Exception("Failed to apply luaL_newstate hook");
         lua_close = ms_lua_close_hook.Apply() ?? throw new Exception("Failed to apply lua_close hook");
 
         ms_activeStates = [];
@@ -485,6 +480,22 @@ public sealed class Lua
         }
     }
 
+    private unsafe static IntPtr ctor_lua_Alloc_new(IntPtr _this, IntPtr lib, long main, long len)
+    {
+        IntPtr ret = ctor_lua_Alloc(_this, lib, main, len);
+
+        IntPtr L = new(*(void**)_this.ToPointer());
+
+        if (L == IntPtr.Zero)
+            return ret;
+
+        add_active_state(L);
+
+        LuaMod.Initialize(L);
+
+        return ret;
+    }
+
     private static void lua_newcall(IntPtr L, int args, int returns)
     {
         //lua_getglobal(L, "debug");
@@ -516,22 +527,6 @@ public sealed class Lua
     {
         remove_active_state(L);
         lua_close(L);
-    }
-
-    private unsafe static IntPtr luaL_newstate_new(IntPtr _this, bool unk0, bool unk1, int unk2)
-    {
-        IntPtr ret = luaL_newstate(_this, unk0, unk1, unk2);
-
-        IntPtr L = new(*(void**)_this.ToPointer());
-
-        if (L == IntPtr.Zero)
-            return ret;
-
-        add_active_state(L);
-
-        LuaMod.Initialize(L);
-
-        return ret;
     }
 
     internal static bool check_active_state(IntPtr L) => ms_activeStates.Select(it => it.Equals(L)).Any();
